@@ -1,3 +1,8 @@
+import org.xml.sax.SAXException;
+
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.TransformerException;
+import java.io.IOException;
 import java.util.Random;
 
 public class ComportamientoBase implements Runnable{
@@ -82,7 +87,19 @@ public class ComportamientoBase implements Runnable{
                         puerto++;
                     // ponemos el mensaje de localización del host correspondiente en la lista de mensajes a enviar del gestor de mensajes
                     System.out.println("envia mensaje");
-                    //this.gm.EnviarMensaje();
+                    try {
+                        this.gm.EnviarMensaje();
+                    } catch (ParserConfigurationException e) {
+                        throw new RuntimeException(e);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    } catch (SAXException e) {
+                        throw new RuntimeException(e);
+                    } catch (jdk.internal.org.xml.sax.SAXException e) {
+                        throw new RuntimeException(e);
+                    } catch (TransformerException e) {
+                        throw new RuntimeException(e);
+                    }
                 }
             }
         } else{
@@ -90,7 +107,19 @@ public class ComportamientoBase implements Runnable{
                 String host = "172.19.154." + i;
                 for (int puerto = Puerto_Inicio; puerto <= Puerto_Inicio + Rango_Puertos; puerto += 2) {
                     // ponemos el mensaje de localización del host correspondiente en la lista de mensajes a enviar del gestor de mensajes
-                    this.gm.EnviarMensaje();
+                    try {
+                        this.gm.EnviarMensaje();
+                    } catch (ParserConfigurationException e) {
+                        throw new RuntimeException(e);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    } catch (SAXException e) {
+                        throw new RuntimeException(e);
+                    } catch (jdk.internal.org.xml.sax.SAXException e) {
+                        throw new RuntimeException(e);
+                    } catch (TransformerException e) {
+                        throw new RuntimeException(e);
+                    }
                 }
             }
         }
