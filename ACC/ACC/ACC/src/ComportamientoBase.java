@@ -89,7 +89,8 @@ public class ComportamientoBase implements Runnable{
                     System.out.println("envia mensaje");
                     try {
                         this.gm.EnviarMensaje();
-                    } catch (ParserConfigurationException e) {
+                    }
+                    catch (ParserConfigurationException e) {
                         throw new RuntimeException(e);
                     } catch (IOException e) {
                         throw new RuntimeException(e);
