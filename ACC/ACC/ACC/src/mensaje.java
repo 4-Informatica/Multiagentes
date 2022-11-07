@@ -1,95 +1,111 @@
-/**
- * @class  mensajeaEnviar
- * @group Grupo 3
- * @version 2.0
- *
- */
+import jdk.internal.org.xml.sax.InputSource;
+import jdk.internal.org.xml.sax.SAXException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
-
+import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 import javax.xml.validation.Validator;
 import java.io.File;
-
+import java.io.IOException;
+import java.io.StringReader;
 import java.net.InetAddress;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Set;
 
-
-/**
- *  En esta clase se realizará la gestion del contenedor de mensajes a enviar, encontraremos un main para ejecutarlo,
- *  un constructor al que se le pasa por parametro una cabecera, un cuerpo y un dom del mensaje.
- */
 public class mensaje {
     Document mensaje;
     boolean correcto;
 
-    InetAddress ip_Emisor;
-    InetAddress ip_Receptor;
+    String receptorID;
+    String puertoReceptor;
+    String receptorIP;
+    String emisorIP;
+    String emisorID;
+    String puertoEmisor;
 
-    int puerto_Emisor;
-    int puerto_Receptor;
-
-    String id_Emisor;
-    String id_Receptor;
-
-    String id_Mensaje;
     String protocolo;
-    int tipoMensaje;
-    String tiempoEnvio;
 
-    Element body;
-    HashMap<String,Object> cab;
 
-    /**
-     *
-     * Metodos getter para cada uno de los atributos de la clase
-     */
-    public InetAddress getIp_Emisor() {
-        return ip_Emisor;
-    }
+    //MENSAJE ATTRIBUTES
+    String idMensaje;
+    String horaGeneracion; //No esta en mensaje GRUPO 4
+    String tipoMensaje;
 
-    public InetAddress getIp_Receptor() {
-        return ip_Receptor;
-    }
+    //MENSAJE CUERPO
+    Element eElementBody;
 
-    public int getPuerto_Emisor() {
-        return puerto_Emisor;
-    }
+//CONSTRUCTOR DE MENSAJE RECIBIDO
+    public mensaje(String xml) throws ParserConfigurationException, IOException, SAXException, org.xml.sax.SAXException {
 
-    public int getPuerto_Receptor() {
-        return puerto_Receptor;
-    }
 
-    public String getId_Emisor() {
-        return id_Emisor;
-    }
+        //Creamos el documento XML desde el String que hemos recibido (por socket)
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        DocumentBuilder builder = factory.newDocumentBuilder();
+        Document doc = builder.parse(String.valueOf(new InputSource(new StringReader(xml))));//.getByteStream());
 
-    public String getId_Receptor() {
-        return id_Receptor;
-    }
+        //una vez tenemos el DOM:
+        //Tratamos la cabeza del mensaje
+        NodeList nListHead = doc.getElementsByTagName("head");
+        Node nNodeHead = nListHead.item(0);
+        Element eElementHead = (Element) nNodeHead;
 
-    public String getId_Mensaje() {
-        return id_Mensaje;
-    }
+        /**
+         * Una vez "dentro" de la etiqueta del head del mensaje XML podemos obtener los valoress de las etiquetas
+         * que queremos fácilmente con el siguiente código. Sabemos de estas etiquetas porque conocemos la estructura
+         * de los mensajes XML.
+         * */
+        this.tipoMensaje = eElementHead.getElementsByTagName("tipo").item(0).getTextContent();
+        this.idMensaje = eElementHead.getElementsByTagName("id_Mensaje").item(0).getTextContent();
 
-    public int getTipoMensaje() {
-        return tipoMensaje;
-    }
+        // Repetimos el proceso, esta vez para obtener los datos del emisor.
+        NodeList nListEmisor = eElementHead.getElementsByTagName("emisor");
+        Node nNodeEmisor = nListEmisor.item(0);
+        Element eElementEmisor = (Element) nNodeEmisor;
+        this.emisorID = eElementEmisor.getElementsByTagName("id").item(0).getTextContent();
+        this.puertoEmisor = eElementEmisor.getElementsByTagName("puerto").item(0).getTextContent();
+        this.emisorIP = eElementEmisor.getElementsByTagName("ip").item(0).getTextContent();
 
-    public String getProtocolo() {
-        return protocolo;
-    }
+        // Repetimos el proceso, esta vez para obtener los datos del receptor.
+        NodeList nListReceptor = eElementHead.getElementsByTagName("receptor");
+        Node nNodeReceptor = nListReceptor.item(0);
+        Element eElementReceptor = (Element) nNodeReceptor;
+        this.receptorID = eElementReceptor.getElementsByTagName("id").item(0).getTextContent();
+        this.puertoReceptor = eElementReceptor.getElementsByTagName("puerto").item(0).getTextContent();
+        this.receptorIP = eElementReceptor.getElementsByTagName("ip").item(0).getTextContent();
 
-    public String getTiempoEnvio() {
-        return tiempoEnvio;
+        this.protocolo = eElementHead.getElementsByTagName("protocolo").item(0).getTextContent();
+        this.horaGeneracion = eElementHead.getElementsByTagName("tiempoEnvio").item(0).getTextContent();
+
+        /*
+
+        // NO NECESARIO
+        /HashMap DicCabeza con todos los atributos de la cabeza del mensaje
+        HashMap<String, String> DicCabeza = new HashMap<String, String>();
+        DicCabeza.put("tipo", TipoMsg);
+        DicCabeza.put("id_Mensaje", ConversacionID);
+        DicCabeza.put("emisorID", EmisorID);
+        DicCabeza.put("emisorPuerto", EmisorPuerto);
+        DicCabeza.put("emisorIP", EmisorIP);
+        DicCabeza.put("receptorID", ReceptorID);
+        DicCabeza.put("receptorPuerto", ReceptorPuerto);
+        DicCabeza.put("receptorIP", ReceptorIP);
+        DicCabeza.put("protocolo", Protocolo);
+        DicCabeza.put("tiempoEnvio", Fecha);*/
+
+        //TRATAR body: POR AHORA SE GUARDA COMO UNA INSTANCIA ELEMENT en eElementBody (Aun no se trata)
+        NodeList nListBody = doc.getElementsByTagName("body");
+        Node nNodeBody = nListBody.item(0);
+        this.eElementBody = (Element) nNodeBody;
+
     }
 
     /** Instancia un mensaje, creando un objeto document donde se almacena el XML formado por la cabecera y el cuerpo parados por parametros
@@ -99,23 +115,22 @@ public class mensaje {
      * @param dom= XLS para comprobar que es correcto el mensaje
      */
     public mensaje(HashMap<String,Object> cabe, Element body, File dom){
-        this.cab=cabe;
-        this.body = body;
 
         //Sacamos todos los atributos del hashmap pasado por parametros y los almacenamos
-        this.id_Receptor=(String)((HashMap)cabe.get("receptor")).get("id");
-        this.id_Emisor=(String)((HashMap)cabe.get("emisor")).get("id");
-        this.puerto_Emisor=(int)((HashMap)cabe.get("emisor")).get("port");
-        this.puerto_Receptor=(int)((HashMap)cabe.get("receptor")).get("port");
-        this.ip_Emisor=(InetAddress) ((HashMap)cabe.get("emisor")).get("ip");
-        this.ip_Receptor=(InetAddress) ((HashMap)cabe.get("receptor")).get("ip");
-        this.id_Mensaje=(String)cabe.get("id_Mensaje");
-        this.tipoMensaje=(int)cabe.get("tipoMensaje");
-        this.tiempoEnvio=(String) cabe.get("tiempoEnvio");
+        this.receptorID=(String)((HashMap)cabe.get("receptor")).get("id");
+        this.emisorID=(String)((HashMap)cabe.get("emisor")).get("id");
+        this.puertoEmisor=(String) ((HashMap)cabe.get("emisor")).get("port");
+        this.puertoReceptor=(String)((HashMap)cabe.get("receptor")).get("port");
+        this.emisorIP= (String) ((HashMap)cabe.get("emisor")).get("ip");
+        this.receptorIP=(String) ((HashMap)cabe.get("receptor")).get("ip");
+        this.idMensaje=(String)cabe.get("id_Mensaje");
+        this.tipoMensaje= (String) cabe.get("tipoMensaje");
+        this.horaGeneracion=(String) cabe.get("tiempoEnvio");
         this.protocolo=(String)cabe.get("protocolo");
 
         //LLamada al metodo que genera un DOM y lo guarda en la clase a partir del head y body pasados
-        this.mensaje=creaXML(cab,body);
+        try{
+        this.mensaje=creaXML(cabe,body);
 
         this.correcto=false;
         if(this.mensaje!=null) {
@@ -126,21 +141,12 @@ public class mensaje {
             }
 
         }
-
-
-
+        }catch (Exception e){
+            System.out.println(e);
+        }
 
     }
-    //Otro constructor, se usa cuando se recibe el mensaje, donde s es la cadena que se recibe
-    public mensaje(String s){
-        //Completar con lo del otro grupo del xml
-    }
-
-
-
-
-
-    /**Obtiene el documento a partir de los parametros, metodo auxiliar
+    /**Obtiene el documento a partir de los parametros
      *
      * @param cab cabeza del documento a generar
      * @param body cuerpo del documento
@@ -226,7 +232,7 @@ public class mensaje {
     }
 
 
-    //Metodo para obtener los arboles de profundidad mayor a dos, para generar el DOM(auxiliar, solo lo usa el constructor)
+    //Metodo para obtener los arboles de profundidad mayor a dos, para generar el DOM
     private void addRamasElem(HashMap<String,Object> lista, Element e,Document document){
         Set<String> setKey = lista.keySet();
         Iterator<String> it = setKey.iterator();
@@ -246,7 +252,7 @@ public class mensaje {
         }
     }
 
-    //Valida un XML a partir de un XSD (Aun no se usa)
+    //Valida un XML a partir de un XSD
     private boolean validaXML(File dom){
         try {
 
@@ -264,5 +270,62 @@ public class mensaje {
             return false;
         }
         return true;
+    }
+
+
+
+    //GETTERS
+
+
+    public Document getMensaje() {
+        return mensaje;
+    }
+
+    public boolean isCorrecto() {
+        return correcto;
+    }
+
+    public String getReceptorID() {
+        return receptorID;
+    }
+
+    public String getPuertoReceptor() {
+        return puertoReceptor;
+    }
+
+    public String getReceptorIP() {
+        return receptorIP;
+    }
+
+    public String getEmisorIP() {
+        return emisorIP;
+    }
+
+    public String getEmisorID() {
+        return emisorID;
+    }
+
+    public String getPuertoEmisor() {
+        return puertoEmisor;
+    }
+
+    public String getProtocolo() {
+        return protocolo;
+    }
+
+    public String getIdMensaje() {
+        return idMensaje;
+    }
+
+    public String getHoraGeneracion() {
+        return horaGeneracion;
+    }
+
+    public String getTipoMensaje() {
+        return tipoMensaje;
+    }
+
+    public Element geteElementBody() {
+        return eElementBody;
     }
 }

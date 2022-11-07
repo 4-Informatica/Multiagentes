@@ -1,4 +1,8 @@
+import org.xml.sax.SAXException;
+
+import javax.xml.parsers.ParserConfigurationException;
 import java.io.DataInputStream;
+import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 
@@ -35,13 +39,7 @@ public class RecibeTcp extends Thread {
                 String mensaje = obj.readUTF();
 
                 // Decidimos que hacer con el mensaje
-                mensaje msg = gestor.ProcesarMensaje(mensaje);
-
-                // Añadimos el mensaje que acabamos de crear al contenedor de mensajes con mutex
-
-                gestor.AñadirMensajeContenedor(msg);
-
-                // Añadimos el mensaje al contenedor de mensajes recibidos
+                gestor.ProcesaMensaje(mensaje);
 
                 System.out.println("Cerrando sockets...");
 
@@ -64,8 +62,19 @@ public class RecibeTcp extends Thread {
                  */
 
                 System.out.println(e.getMessage());
-                mensaje msg = gestor.GeneraMensaje("Error","mensaje no recibido");
-                gestor.AñadirMensajeContenedor(msg);
+                try
+                {
+                    gestor.ProcesaMensaje("Error: mensaje no recibido");
+                }
+                catch (ParserConfigurationException ex) {
+                    throw new RuntimeException(ex);
+                } catch (IOException ex) {
+                    throw new RuntimeException(ex);
+                } catch (SAXException ex) {
+                    throw new RuntimeException(ex);
+                } catch (jdk.internal.org.xml.sax.SAXException ex) {
+                    throw new RuntimeException(ex);
+                }
             }
         }
     }

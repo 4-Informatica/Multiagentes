@@ -71,7 +71,7 @@ public class gestorMensajes extends Thread
      *
      * @throws InterruptedException
      */
-    public void EnviarMensaje() throws InterruptedException {
+    public void EnviarMensaje() throws InterruptedException, ParserConfigurationException, IOException, SAXException, jdk.internal.org.xml.sax.SAXException, TransformerException {
 
         System.out.println("Entrando en envía mensaje");
 
@@ -91,9 +91,9 @@ public class gestorMensajes extends Thread
 
             // Dependiendo del protocolo, enviamos el mensaje de una forma u otra
             if (msg.getProtocolo().equals("tcp"))
-                EnviaTcp(xml, msg.getIp_Emisor(), msg.getPuerto_Emisor());
+                EnviaTcp(xml, msg.getEmisorIP(), msg.getPuertoEmisor());
             else
-                EnviaUdp(xml, msg.getIp_Emisor(), msg.getPuerto_Emisor());
+                EnviaUdp(xml, msg.getEmisorIP(), msg.getPuertoEmisor());
         }
     }
 
@@ -146,10 +146,11 @@ public class gestorMensajes extends Thread
      * @param host Ip de la máquina a la que queremos enviar el mensaje
      * @param puerto Puerto de la máquina por la que enviar el mensaje
      */
-    public void EnviaTcp(String msg, InetAddress host, int puerto) {
+    public void EnviaTcp(String msg, String host, String puerto) throws ParserConfigurationException, IOException, SAXException, jdk.internal.org.xml.sax.SAXException {
         try {
+
             // Creación socket para comunicarse con el servidor con el host y puerto asociados al servidor
-            Socket skCliente = new Socket(host, puerto);
+            Socket skCliente = new Socket(host, Integer.parseInt(puerto));
 
             // Creación flujo de salida
             DataOutputStream obj = new DataOutputStream(skCliente.getOutputStream());
@@ -168,8 +169,7 @@ public class gestorMensajes extends Thread
         } catch (Exception e) {
             // Failure
             System.out.println("Some problem occured: " + e + "\n");
-            mensaje mensaje = GeneraMensaje("Error", "fallo al enviar mensaje TCP");
-            this.AñadirMensajeContenedor(mensaje);
+            ProcesaMensaje("Error fallo al enviar mensaje TCP");
         }
     }
 
@@ -180,7 +180,7 @@ public class gestorMensajes extends Thread
      * @param host Ip de la máquina a la que queremos enviar el mensaje
      * @param puerto Puerto de la máquina por la que enviar el mensaje
      */
-    public void EnviaUdp(String msg, InetAddress host, int puerto)
+    public void EnviaUdp(String msg, String host, String puerto)
     {
         byte[] buffer = new byte[1024];
 
@@ -192,7 +192,7 @@ public class gestorMensajes extends Thread
             buffer = msg.getBytes();
 
             //Creamos un datagrama
-            DatagramPacket mensaje = new DatagramPacket(buffer, buffer.length, host, puerto);
+            DatagramPacket mensaje = new DatagramPacket(buffer, buffer.length, InetAddress.getByName(host), Integer.parseInt(puerto));
 
             //Lo enviamos con send
             System.out.println("Envio el datagrama");
@@ -204,42 +204,20 @@ public class gestorMensajes extends Thread
         catch (Exception ex)
         {
             System.out.println(ex);
-            mensaje mensaje = GeneraMensaje("Error", "fallo al enviar mensaje UDP");
-            this.AñadirMensajeContenedor(mensaje);
+            try
+            {
+                ProcesaMensaje("Error: fallo al recibir mensaje UDP");
+            }
+            catch (ParserConfigurationException eo) {
+                throw new RuntimeException(eo);
+            } catch (IOException eo) {
+                throw new RuntimeException(eo);
+            } catch (SAXException eo) {
+                throw new RuntimeException(eo);
+            } catch (jdk.internal.org.xml.sax.SAXException eo) {
+                throw new RuntimeException(eo);
+            }
         }
-    }
-
-    /**
-     * Funcion: procesarMensaje()
-     *
-     * @param mensaje
-     * @return Mensaje
-     */
-    public mensaje ProcesarMensaje(String mensaje)
-    {
-        return new mensaje(mensaje);
-    }
-
-    /**
-     * Funcion: transformarMensaje()
-     *
-     * @param mensaje
-     * @return
-     */
-    public String TransformarMensaje(mensaje mensaje)
-    {
-        return "mensaje";
-    }
-
-    /**
-     * Función auxiliar de ejemplo
-     * @param cabeza
-     * @param cuerpo
-     * @return
-     */
-    public mensaje GeneraMensaje(String cabeza, String cuerpo)
-    {
-        return new mensaje(cabeza);
     }
 
     /**
@@ -293,10 +271,9 @@ public class gestorMensajes extends Thread
     // Funcion recibeMensaje() -> Recibe mensages UDP o TCP, procesa la parte genérica (Llamando a TratarCabeza) y
     //  la almacena en ContenedorMensajesRecibidos(ArrayList) para que la función del agente los recoja cuando quiera
 
-    public static void recibeMensaje(String xml) throws ParserConfigurationException, IOException, SAXException, jdk.internal.org.xml.sax.SAXException {
+    public void ProcesaMensaje(String xml) throws ParserConfigurationException, IOException, SAXException, jdk.internal.org.xml.sax.SAXException {
 
         //Código para recibir String
-
 
         /*
          * Una vez tenemos el String recibido debemos crear una instancia de mensajeRecibido Y meterlo a la cola
@@ -304,9 +281,9 @@ public class gestorMensajes extends Thread
          * */
 
         //Creamos el mensajeRecibido y lo almacenamos
-        mensajeRecibido mR = new mensajeRecibido(xml); // HABRÁ QUE INICIALIZARLO CORRECTAMENTE CUANDO TENGAMOS LA ESTRUCTURA DE LA CLASE
-        //ContenedorMensajesRecibidos.add(mR);
+        mensaje mR = new mensaje(xml); // HABRÁ QUE INICIALIZARLO CORRECTAMENTE CUANDO TENGAMOS LA ESTRUCTURA DE LA CLASE
 
+        AñadirMensajeContenedor(mR);
     }
 
 
@@ -319,25 +296,25 @@ public class gestorMensajes extends Thread
      *
      *
      **/
-    public static void enviaMensaje(mensajeaEnviar mA) throws IOException, SAXException,ParserConfigurationException, TransformerException {
+    public String TransformarMensaje(mensaje mA) throws IOException, SAXException,ParserConfigurationException, TransformerException {
 
 
         // Debemos sacar del mensajeAEnviar los datos de la cabecera y el elementobody para crear el XML
 
         String tipoMensaje = mA.getTipoMensaje();
-        String id_Mensaje = mA.getId_Mensaje();
-        InetAddress ip_Emisor = mA.getIp_Emisor();
-        String puerto_Emisor = mA.getPuerto_Emisor();
-        String id_Emisor =mA.getId_Emisor();
+        String id_Mensaje = mA.getIdMensaje();
+        String ip_Emisor = mA.getEmisorIP();
+        String puerto_Emisor = mA.getPuertoEmisor();
+        String id_Emisor =mA.getEmisorID();
 
-        InetAddress ip_Receptor = mA.getIp_Receptor();
-        String puerto_Receptor = mA.getPuerto_Receptor();
-        String id_Receptor = mA.getId_Receptor();
+        String ip_Receptor = mA.getReceptorIP();
+        String puerto_Receptor = mA.getPuertoReceptor();
+        String id_Receptor = mA.getReceptorID();
 
         String protocolo = mA.getProtocolo();
-        String tiempoEnvio = mA.getTiempoEnvio();
+        String tiempoEnvio = mA.getHoraGeneracion();
 
-        Element body = mA.getBody();
+        Element body = mA.geteElementBody();
 
         // Una vez tenemos todos estos datos ya podemos crear el XML
 
@@ -428,8 +405,6 @@ public class gestorMensajes extends Thread
         //Creamso el mensaje string a enviar
         String xml_string = writer.getBuffer().toString().replaceAll("\n|\r|    ", "");
 
-        /*
-         * CODIGO PARA ENVIAR EL STRING
-         * */
+        return xml_string;
     }
 }

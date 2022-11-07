@@ -12,6 +12,7 @@ public class Acc {
     {
         VIVO, MUERTO
     }
+
     static String Ip_Monitor, Inicio_rango_IPs, Ip_Propia, ID_propio;
 
     static int Puerto_Monitor, Rango_IPs, Tiempo_de_vida, Numero_de_generaciones, Puerto_Propio, Estado_Actual, Puerto_Inicio, Rango_Puertos, UDPport, TCPport,
@@ -45,6 +46,7 @@ public class Acc {
         notificaNacimiento();
         Estado_Actual = Estado_del_ACC.VIVO.ordinal();
     }
+
     static int[] buscaNido() {
         // CUIDADO CONCURRENCIA
 
@@ -84,6 +86,7 @@ public class Acc {
             return ports; // retornamos [0,0] si no hay puerto
         }
     }
+
     static void generaConfiguracionInicial(String[] args) {
         try {
             Ip_Propia = InetAddress.getLocalHost().getHostAddress();
