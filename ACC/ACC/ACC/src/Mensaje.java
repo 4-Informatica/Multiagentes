@@ -21,7 +21,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Set;
 
-public class mensaje {
+public class Mensaje {
     Document mensaje;
     boolean correcto;
 
@@ -44,7 +44,7 @@ public class mensaje {
     Element eElementBody;
 
 //CONSTRUCTOR DE MENSAJE RECIBIDO
-    public mensaje(String xml) throws ParserConfigurationException, IOException, SAXException, org.xml.sax.SAXException {
+    public Mensaje(String xml) throws ParserConfigurationException, IOException, SAXException, org.xml.sax.SAXException {
 
 
         //Creamos el documento XML desde el String que hemos recibido (por socket)
@@ -114,7 +114,7 @@ public class mensaje {
      * @param body=cuerpo del mensaje, dejamos en Element vacio porque aun no se implementa la parte del cuerpo
      * @param dom= XLS para comprobar que es correcto el mensaje
      */
-    public mensaje(HashMap<String,Object> cabe, Element body, File dom){
+    public Mensaje(HashMap<String,Object> cabe, Element body, File dom){
 
         //Sacamos todos los atributos del hashmap pasado por parametros y los almacenamos
         this.receptorID=(String)((HashMap)cabe.get("receptor")).get("id");

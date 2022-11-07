@@ -1,5 +1,5 @@
-public class funcionDeAgente implements Runnable {
-    funcionDeAgente() {
+public class FuncionDeAgente implements Runnable {
+    FuncionDeAgente() {
         new Thread(this, "funcion_del_agente").start();
     }
 

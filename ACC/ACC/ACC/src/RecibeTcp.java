@@ -10,7 +10,7 @@ import java.net.Socket;
  * Esta clase se ha creado con el motivo de separar la lógica de recepción de mensajes TCP
  */
 public class RecibeTcp extends Thread {
-    private static gestorMensajes gestor; // Referencia del gestor de mensajes
+    private static GestorMensajes gestor; // Referencia del gestor de mensajes
 
     /**
      * Método que se va a llamar al iniciar el hilo de esta clase

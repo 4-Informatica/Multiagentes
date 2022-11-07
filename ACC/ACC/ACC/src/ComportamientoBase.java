@@ -1,18 +1,17 @@
-import java.util.ArrayList;
 import java.util.Random;
 
-public class comportamientoBase implements Runnable{
+public class ComportamientoBase implements Runnable{
     String id, direccionJar;
     long horaDeMuerte;
     int generaciones, Puerto_Inicio, Rango_Puertos, tiempoDeVida, tiempo_espera_comportamiento_base;
     boolean puertos_aleatorios;
     double Frecuencia_partos, Frecuencia_rastreo_puertos;
 
-    gestorMensajes gm;
+    GestorMensajes gm;
     Random random = new Random();
 
-    comportamientoBase(String id, int generaciones, int puerto_Inicio, int rango_Puertos, int tiempoDeVida, int tiempo_espera_comportamiento_base,
-                       double frecuencia_partos, double frecuencia_rastreo_puertos, gestorMensajes gm) {
+    ComportamientoBase(String id, int generaciones, int puerto_Inicio, int rango_Puertos, int tiempoDeVida, int tiempo_espera_comportamiento_base,
+                       double frecuencia_partos, double frecuencia_rastreo_puertos, GestorMensajes gm) {
         this.id = id;
         this.generaciones = generaciones;
         this.Puerto_Inicio = puerto_Inicio;

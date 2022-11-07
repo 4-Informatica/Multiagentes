@@ -23,7 +23,7 @@ public class Acc {
     static Socket monitorComunicacion;
     static DataOutputStream out;
 
-    static ArrayList<accLocalizado> contenedor_directorio_ACCs;
+    static ArrayList<AccLocalizado> contenedor_directorio_ACCs;
 
     public static void main(String[] args) {
         Puerto_Inicio = 50000;
@@ -36,12 +36,12 @@ public class Acc {
 
         generaConfiguracionInicial(args);
 
-        gestorMensajes gm = new gestorMensajes(TCPport, UDPport);
+        GestorMensajes gm = new GestorMensajes(TCPport, UDPport);
 
-        comportamientoBase cb = new comportamientoBase(ID_propio, Numero_de_generaciones, Puerto_Inicio, Rango_Puertos, Tiempo_de_vida*1000,
+        ComportamientoBase cb = new ComportamientoBase(ID_propio, Numero_de_generaciones, Puerto_Inicio, Rango_Puertos, Tiempo_de_vida*1000,
                 tiempo_espera_comportamiento_base*1000, Frecuencia_partos, Frecuencia_rastreo_puertos, gm);
 
-        funcionDeAgente fa = new funcionDeAgente();
+        FuncionDeAgente fa = new FuncionDeAgente();
 
         notificaNacimiento();
         Estado_Actual = Estado_del_ACC.VIVO.ordinal();
@@ -143,7 +143,7 @@ public class Acc {
      * @param puerto del agente localizado
      */
     static public void addAgenteLocalizado(String ID, String IP, int puerto){
-        accLocalizado nuevoAgente = new accLocalizado(ID, IP, puerto);
+        AccLocalizado nuevoAgente = new AccLocalizado(ID, IP, puerto);
         if(!contenedor_directorio_ACCs.contains(nuevoAgente))
             contenedor_directorio_ACCs.add(nuevoAgente);
     }

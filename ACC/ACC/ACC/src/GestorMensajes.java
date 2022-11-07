@@ -23,13 +23,13 @@ import java.util.LinkedList;
  * como enviados. Hemos visto necesario utilizar una clase aparte en vez de utilizar un método. Si no no podríamos hacer
  * lo que queremos hacer con esta clase. Esta clase es una forma de abstraer la lógica de comunicación y mensajería.
  */
-public class gestorMensajes extends Thread
+public class GestorMensajes extends Thread
 {
     // Necesitamos que ambos contenedores sean públicos para poder acceder desde el GestorDeMensajes
 
-    public LinkedList<mensaje> contenedor_de_mensajes_a_enviar = new LinkedList<>(); // Contenedor para almacenar cada uno de los mensajes enviados por un agente
+    public LinkedList<Mensaje> contenedor_de_mensajes_a_enviar = new LinkedList<>(); // Contenedor para almacenar cada uno de los mensajes enviados por un agente
 
-    public LinkedList<mensaje> contenedor_de_mensajes_recibidos = new LinkedList<>(); // Contenedor para almacenar cada uno de los mensajes recibidos por un agente
+    public LinkedList<Mensaje> contenedor_de_mensajes_recibidos = new LinkedList<>(); // Contenedor para almacenar cada uno de los mensajes recibidos por un agente
 
     private RecibeTcp recibeTcp; // Instancia de la clase que se va a encargar de recibir mensajes por TCP
     private RecibeUdp recibeUdp; // Instancia de la clase que se va a encargar de recibir mensajes por UDP
@@ -41,7 +41,7 @@ public class gestorMensajes extends Thread
     /**
      * Constructor de la clase GestorMensajes
      */
-    public gestorMensajes(int puerto_PropioTcp, int puerto_PropioUdp)
+    public GestorMensajes(int puerto_PropioTcp, int puerto_PropioUdp)
     {
         // Llamada al constructor de la clase Thread
         super();
@@ -84,7 +84,7 @@ public class gestorMensajes extends Thread
             }
 
             // Obtenemos un mensaje del contenedor de mensajes a enviar
-            mensaje msg = CogerMensajeDelContenedor();
+            Mensaje msg = CogerMensajeDelContenedor();
 
             // Obtenemos el mensaje en formato xml para enviarlo
             String xml = TransformarMensaje(msg);
@@ -102,7 +102,7 @@ public class gestorMensajes extends Thread
      *
      * @param msg El mensaje a enviar
      */
-    public void AñadirMensajeContenedor(mensaje msg) {
+    public void AñadirMensajeContenedor(Mensaje msg) {
         //De esta manera el contenedor de mensajes recibidos no es accedido por dos hilos al mismo tiempo y conseguimos mutual exclusion
         synchronized (mutex) {
             contenedor_de_mensajes_recibidos.add(msg);
@@ -114,8 +114,8 @@ public class gestorMensajes extends Thread
      *
      * @return Mensaje a obtener
      */
-    public mensaje CogerMensajeDelContenedor() {
-        mensaje msg;
+    public Mensaje CogerMensajeDelContenedor() {
+        Mensaje msg;
 
         synchronized (mutex) {
             msg = contenedor_de_mensajes_recibidos.pop();
@@ -281,7 +281,7 @@ public class gestorMensajes extends Thread
          * */
 
         //Creamos el mensajeRecibido y lo almacenamos
-        mensaje mR = new mensaje(xml); // HABRÁ QUE INICIALIZARLO CORRECTAMENTE CUANDO TENGAMOS LA ESTRUCTURA DE LA CLASE
+        Mensaje mR = new Mensaje(xml); // HABRÁ QUE INICIALIZARLO CORRECTAMENTE CUANDO TENGAMOS LA ESTRUCTURA DE LA CLASE
 
         AñadirMensajeContenedor(mR);
     }
@@ -296,7 +296,7 @@ public class gestorMensajes extends Thread
      *
      *
      **/
-    public String TransformarMensaje(mensaje mA) throws IOException, SAXException,ParserConfigurationException, TransformerException {
+    public String TransformarMensaje(Mensaje mA) throws IOException, SAXException,ParserConfigurationException, TransformerException {
 
 
         // Debemos sacar del mensajeAEnviar los datos de la cabecera y el elementobody para crear el XML

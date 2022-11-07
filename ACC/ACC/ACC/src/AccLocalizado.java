@@ -5,7 +5,7 @@
  * @author Miguel Paños Gonzalez
  * @author Jose Angel Serrano Pardo
  */
-public class accLocalizado {
+public class AccLocalizado {
     String ID;
     String IP;
     int puerto;
@@ -16,7 +16,7 @@ public class accLocalizado {
      * @param IP del agente localido
      * @param puerto del agente localido
      */
-    accLocalizado(String ID, String IP, int puerto){
+    AccLocalizado(String ID, String IP, int puerto){
         this.ID = ID;
         this.IP = IP;
         this.puerto = puerto;

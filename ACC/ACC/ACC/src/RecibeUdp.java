@@ -9,7 +9,7 @@ import java.net.DatagramSocket;
  * Esta clase se ha creado con el motivo de separar la lógica de recepción de mensajes UDP
  */
 public class RecibeUdp extends Thread {
-    private static gestorMensajes gestor; // Referencia del gestor de mensajes
+    private static GestorMensajes gestor; // Referencia del gestor de mensajes
 
     /**
      * Método que se va a llamar al iniciar el hilo de esta clase
@@ -52,7 +52,7 @@ public class RecibeUdp extends Thread {
                  */
 
                 System.out.println(e.getMessage() + "Recibir UDP");
-                mensaje msg = null;
+                Mensaje msg = null;
                 try
                 {
                     gestor.ProcesaMensaje("Error: fallo al recibir mensaje UDP");
