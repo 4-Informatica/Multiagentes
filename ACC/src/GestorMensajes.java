@@ -37,11 +37,13 @@ public class GestorMensajes extends Thread
 
     public int Puerto_PropioTcp;
     public int Puerto_PropioUdp;
+    public ServerSocket socketTCP;
+    public DatagramSocket socketUDP;
 
     /**
      * Constructor de la clase GestorMensajes
      */
-    public GestorMensajes(int puerto_PropioTcp, int puerto_PropioUdp)
+    public GestorMensajes(int puerto_PropioTcp, int puerto_PropioUdp, ServerSocket socketTCP, DatagramSocket socketUDP)
     {
         // Llamada al constructor de la clase Thread
         super();
@@ -49,6 +51,8 @@ public class GestorMensajes extends Thread
         // Asignamos los puertos tcp y udp
         this.Puerto_PropioTcp = puerto_PropioTcp;
         this.Puerto_PropioUdp = puerto_PropioUdp;
+        this.socketTCP = socketTCP;
+        this.socketUDP = socketUDP;
     }
 
     /**

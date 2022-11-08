@@ -1,8 +1,5 @@
 import java.io.*;
-import java.net.InetAddress;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.net.UnknownHostException;
+import java.net.*;
 import java.util.ArrayList;
 import java.util.Random;
 
@@ -21,6 +18,8 @@ public class Acc {
     static double Frecuencia_partos, Frecuencia_rastreo_puertos;
 
     static Socket monitorComunicacion;
+    static ServerSocket socketTCP;
+    static DatagramSocket socketUDP;
     static DataOutputStream out;
 
     static ArrayList<AccLocalizado> contenedor_directorio_ACCs;
@@ -29,14 +28,11 @@ public class Acc {
         Puerto_Inicio = 50000;
         Rango_Puertos = 100;
 
-        //Puerto_Propio = buscaNido();
-        int ports[] = buscaNido();
-        UDPport = ports[0]; // getAvailablePort para obtener un puerto libre y asignarselo a
-        TCPport = ports[1]; // nuestro agente
+        buscaNido();
 
         generaConfiguracionInicial(args);
 
-        GestorMensajes gm = new GestorMensajes(TCPport, UDPport);
+        GestorMensajes gm = new GestorMensajes(TCPport, UDPport, socketTCP, socketUDP);
 
         ComportamientoBase cb = new ComportamientoBase(ID_propio, Numero_de_generaciones, Puerto_Inicio, Rango_Puertos, Tiempo_de_vida*1000,
                 tiempo_espera_comportamiento_base*1000, Frecuencia_partos, Frecuencia_rastreo_puertos, gm);
@@ -47,43 +43,29 @@ public class Acc {
         Estado_Actual = Estado_del_ACC.VIVO.ordinal();
     }
 
-    static int[] buscaNido() {
+    static void buscaNido() {
         // CUIDADO CONCURRENCIA
 
         /* SECCION 1 */
-        ServerSocket socket = null;
-        ServerSocket socket2 = null;
-        int[] ports = { 0, 0 };
-
+        ServerSocket socket;
         Random r = new Random();
         int Puerto_Fin = Puerto_Inicio + Rango_Puertos;
-        int n = Puerto_Inicio + r.nextInt((Puerto_Fin - Puerto_Inicio) + 1);
+        int TCPport = Puerto_Inicio + r.nextInt((Puerto_Fin - Puerto_Inicio) + 1);
         while (true) {
 
             /* SECCION 2 */
-            while (n % 2 != 0) {
-                n = Puerto_Inicio + r.nextInt((Puerto_Fin - Puerto_Inicio) + 1);
+            while (TCPport % 2 != 0) {
+                TCPport = Puerto_Inicio + r.nextInt((Puerto_Fin - Puerto_Inicio) + 1);
             }
             try {
-                socket = new ServerSocket(n); // abrimos dos sockets, uno para UDP otro para TCP
-                socket2 = new ServerSocket(n + 1);
-
-                assert socket != null;
-                try {
-                    /* SECCION 3 */
-                    socket.close(); // cerramos los sockets
-                    socket2.close();
-                } catch (IOException e) { // control de excepcion
-                    e.printStackTrace();
-                }
-                // puerto par UPD, puerto impar TCP arr
-                ports[0] = n; // array [UDP,TCP]
-                ports[1] = n + 1;
+                socketTCP= new ServerSocket(TCPport); // abrimos dos sockets, uno para UDP otro para TCP
+                socket = new ServerSocket(UDPport);
+                socket.close();
+                UDPport = TCPport + 1;
+                socketUDP = new DatagramSocket(UDPport);
             } catch (IOException e) {// si salta excepcion al abrir puerto, puerto ocupado
                 continue; // continuamos buscando
             }
-            /* SECCION 4 */
-            return ports; // retornamos [0,0] si no hay puerto
         }
     }
 
