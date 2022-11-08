@@ -220,17 +220,7 @@ public class GestorMensajes extends Thread
         }
     }
 
-    /**
-     *
-     * @param:
-     *      1) ip_Receptor:InetAdress
-     *      2) puerto_Receptor:int
-     *      3) id_Receptor:String
-     *      4) tipoMensaje:String
-     *      5) protocolo:String
-     *      6)id_mensaje:String
-     * @return cabecera completa, con la Ip del emisor, puerto, id, hora de generacion y los parametros pasados, ademas dek orden correcto
-     */
+
     public HashMap<String,Object> generaCab(String p_e,String id_e,String ip_e,String p_r,String id_r,String ip_r,
                                             String tipo,String protocolo,String id_men){
 

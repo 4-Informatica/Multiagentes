@@ -3,6 +3,7 @@ import org.xml.sax.SAXException;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Random;
 
 public class ComportamientoBase implements Runnable{
@@ -29,7 +30,7 @@ public class ComportamientoBase implements Runnable{
         this.Frecuencia_rastreo_puertos = frecuencia_rastreo_puertos;
 
         this.horaDeMuerte = System.currentTimeMillis() + (long) tiempoDeVida;
-        this.direccionJar = "C:/ACC-Multiagentes/ACC.jar";
+        this.direccionJar = "C:\\Users\\domin\\Desktop\\ACC.jar";
 
         this.gm = gm;
 
@@ -67,7 +68,7 @@ public class ComportamientoBase implements Runnable{
     void GenerarNuevoAcc(String id) {
         try {
             if (Frecuencia_partos >= random.nextDouble() && generaciones > 0) {
-                ProcessBuilder pb = new ProcessBuilder("C:/Program Files/Java/jdk-17.0.5/bin/java.exe", "-jar", direccionJar, "" + generaciones);
+                ProcessBuilder pb = new ProcessBuilder("C:/Program Files/Java/.../bin/java.exe", "-jar", direccionJar, "" + generaciones);
                 pb.start();
             }
         } catch (Exception e) {
@@ -88,6 +89,13 @@ public class ComportamientoBase implements Runnable{
                     // ponemos el mensaje de localización del host correspondiente en la lista de mensajes a enviar del gestor de mensajes
                     System.out.println("envia mensaje");
                     try {
+                        HashMap<String, Object> cab = this.gm.generaCab("1202", this.id, host, "12450","ghsf",
+                                "167.90.0.17","2","tcp","123sd");
+                        System.out.println(cab);
+                        Mensaje msg = new Mensaje(cab,null,null);
+                        System.out.println(msg);
+                        this.gm.AñadirMensajeContenedor(msg);
+                        System.out.println(msg.getProtocolo());
                         this.gm.EnviarMensaje();
                     }
                     catch (ParserConfigurationException e) {

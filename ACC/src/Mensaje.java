@@ -166,7 +166,8 @@ public class Mensaje {
 
             //Se crean los elementos cabeza y cuerpo del que cuelgan el resto de nodos
             Element cabeza = document.createElement("head");
-            Element cuerpo = body;
+            Element cuerpo = document.createElement("body");
+
 
             //Se obtienen a partir de cab todos los nodos, que se recorren en profundidad para obtener el documento
             Set<String> conj =  cab.keySet();
@@ -258,12 +259,12 @@ public class Mensaje {
 
             SchemaFactory factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
             //En path,poner el lugar donde se aloje el XML generado
-            Schema schema = factory.newSchema(new File("src/file.xsd"));
+            Schema schema = factory.newSchema(new File("C:\\Users\\domin\\Desktop\\Multiagentes-main\\ACC\\ACC\\ACC\\src/estructuraXML.xsd"));
 
             Validator validator = schema.newValidator();
             //EN path poner el doc XSD
 
-            validator.validate(new StreamSource(new File("src/file.xml")));
+            validator.validate(new StreamSource(new File("C:\\Users\\domin\\Desktop\\Multiagentes-main\\ACC\\ACC\\ACC\\src/estructuraXML.xml")));
 
         } catch (Exception e) {
             System.out.println("Exception: "+e.getMessage());

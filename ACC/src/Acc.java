@@ -96,7 +96,6 @@ public class Acc {
 
         ID_propio = Ip_Propia + "-" + UDPport + "-" + TCPport;
         Numero_de_generaciones = Integer.parseInt(args[0]) - 1;
-        //Numero_de_generaciones = 5;
         Tiempo_de_vida = 10;                    // Segundos
         tiempo_espera_comportamiento_base = 3;  // Segundos
         Puerto_Monitor = 40000;
@@ -105,7 +104,7 @@ public class Acc {
         Frecuencia_rastreo_puertos = 0.7;
 
         try {
-            System.setOut(new PrintStream(new File("C:/ACC-Multiagentes/salida" + ID_propio + ".txt")));
+            System.setOut(new PrintStream(new File("C:\\Users\\domin\\Desktop\\Multiagentes-main" + ID_propio + ".txt")));
         } catch (FileNotFoundException e) {
             throw new RuntimeException(e);
         }
