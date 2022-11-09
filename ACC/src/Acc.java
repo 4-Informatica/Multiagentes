@@ -15,7 +15,7 @@ public class Acc {
 
     static String Ip_Monitor, Inicio_rango_IPs, Ip_Propia, ID_propio;
 
-    static int Puerto_Monitor, Rango_IPs, Tiempo_de_vida, Numero_de_generaciones, Puerto_Propio, Estado_Actual, Puerto_Inicio, Rango_Puertos, UDPport, TCPport,
+    static int Puerto_Monitor, Rango_IPs, puertosBuscar, Tiempo_de_vida, Numero_de_generaciones, Puerto_Propio, Estado_Actual, Puerto_Inicio, Rango_Puertos, UDPport, TCPport,
             tiempo_espera_comportamiento_base;
 
     static double Frecuencia_partos, Frecuencia_rastreo_puertos;
@@ -24,6 +24,7 @@ public class Acc {
     static DataOutputStream out;
 
     static ArrayList<AccLocalizado> contenedor_directorio_ACCs;
+    static String ipInicial, ipFin;
 
     public static void main(String[] args) {
         Puerto_Inicio = 50000;
@@ -39,7 +40,7 @@ public class Acc {
         GestorMensajes gm = new GestorMensajes(TCPport, UDPport);
 
         ComportamientoBase cb = new ComportamientoBase(ID_propio, Numero_de_generaciones, Puerto_Inicio, Rango_Puertos, Tiempo_de_vida*1000,
-                tiempo_espera_comportamiento_base*1000, Frecuencia_partos, Frecuencia_rastreo_puertos, gm);
+                tiempo_espera_comportamiento_base*1000, Frecuencia_partos, Frecuencia_rastreo_puertos, gm,Ip_Propia,UDPport,TCPport, ipInicial, ipFin,puertosBuscar);
 
         FuncionDeAgente fa = new FuncionDeAgente();
 
@@ -99,6 +100,9 @@ public class Acc {
         Tiempo_de_vida = 10;                    // Segundos
         tiempo_espera_comportamiento_base = 3;  // Segundos
         Puerto_Monitor = 40000;
+        ipInicial="172.24.196.1";
+        ipFin="172.24.197.254";
+        puertosBuscar=5;
 
         Frecuencia_partos = 0.5;
         Frecuencia_rastreo_puertos = 0.7;
@@ -124,24 +128,6 @@ public class Acc {
             System.out.println(" No se ha podido enviar la notificación de nacimiento");
         }
     }
-
-    /*static void tratarNuevoMensaje(){
-        // si el mensaje es de tipo respuesta a la localizacion, se debe llamar a la funcion addAgenteLocalizado(...)
-        if (mensaje.tipo==respuestaLocalizacion){
-            addAgenteLocalizado(ID, IP, puerto);
-        }
-    }*/
-
-    /**
-     * Funcion que añade un agente localizado al contenedor de agentes localizados, si no se estuviera ya hay.
-     * @author Daniel Espinosa Perez
-     * @author Jose Antonio Garcia Castro
-     * @author Miguel Paños Gonzalez
-     * @author Jose Angel Serrano Pardo
-     * @param ID del agente localizado
-     * @param IP del agente localizado
-     * @param puerto del agente localizado
-     */
     static public void addAgenteLocalizado(String ID, String IP, int puerto){
         AccLocalizado nuevoAgente = new AccLocalizado(ID, IP, puerto);
         if(!contenedor_directorio_ACCs.contains(nuevoAgente))
