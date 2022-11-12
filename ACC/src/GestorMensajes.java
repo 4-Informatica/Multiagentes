@@ -18,6 +18,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
 
+
+
 /**
  * GestorMensajes es la clase que hemos visto necesaria crear para poder gestionar todos los mensajes, tanto recibidos
  * como enviados. Hemos visto necesario utilizar una clase aparte en vez de utilizar un método. Si no no podríamos hacer
@@ -27,7 +29,7 @@ public class GestorMensajes extends Thread
 {
     // Necesitamos que ambos contenedores sean públicos para poder acceder desde el GestorDeMensajes
 
-    public LinkedList<Mensaje> contenedor_de_mensajes_a_enviar = new LinkedList<>(); // Contenedor para almacenar cada uno de los mensajes enviados por un agente
+    public LinkedList<Mensaje> contenedor_de_mensajes_a_enviar = new LinkedList<>(); // Contenedor para almacenar cada uno de los mensajes para enviar por un agente
 
     public LinkedList<Mensaje> contenedor_de_mensajes_recibidos = new LinkedList<>(); // Contenedor para almacenar cada uno de los mensajes recibidos por un agente
 
@@ -49,6 +51,10 @@ public class GestorMensajes extends Thread
         // Asignamos los puertos tcp y udp
         this.Puerto_PropioTcp = puerto_PropioTcp;
         this.Puerto_PropioUdp = puerto_PropioUdp;
+
+        // Creamos los hilos de recibir mensajes con ambos protocolos
+        this.recibeTcp = new RecibeTcp(this);
+        this.recibeUdp = new RecibeUdp(this);
     }
 
     /**
@@ -57,43 +63,42 @@ public class GestorMensajes extends Thread
     @Override
     public void run()
     {
-        // Creamos los hilos de recibir mensajes con ambos protocolos
-        recibeTcp = new RecibeTcp();
-        recibeUdp = new RecibeUdp();
-
         // Comenzamos ambos hilos para recibir mensajes con ambos protocolos
-        recibeTcp.start();
-        recibeUdp.start();
+        //recibeTcp.start();
+        //recibeUdp.start();
     }
 
     /**
-     * EnviarMensaje() envia todos los mensajes de la cola. Si la cola está vacía se duerme y luego vuelve a mirar.
+     * EnviarMensaje() envia todos los mensajes de la cola. Si la cola está vacía no hace nada.
      *
      * @throws InterruptedException
      */
-    public void EnviarMensaje() throws InterruptedException, ParserConfigurationException, IOException, SAXException, jdk.internal.org.xml.sax.SAXException, TransformerException {
+    public void EnviarMensaje() {
+        //System.out.println("ENVIAR MENSAJE");
 
-        System.out.println("Entrando en envía mensaje");
+        try {
+            //System.out.println("Entrando en envía mensaje");
 
-        while (true) {
             // Si el agente no tiene mensajes para enviar, se para 1s antes de mirar otra vez
-            if (ComprobarContenedorDeMensajes()) {
-                System.out.println("Probando envia mensaje");
-                sleep(1000);
-                continue;
+            if (!ComprobarContenedorDeMensajesAEnviar()) {
+                //System.out.println("Probando envia mensaje");
+
+                // Obtenemos un mensaje del contenedor de mensajes a enviar
+                Mensaje msg = CogerMensajeDelContenedorAEnviar();
+
+                // Obtenemos el mensaje en formato xml para enviarlo
+                String xml = TransformarMensaje(msg);
+                // Dependiendo del protocolo, enviamos el mensaje de una forma u otra
+                if (msg.getProtocolo().equals("TCP"))
+                    EnviaTcp(xml, msg.getReceptorIP(), msg.getPuertoReceptor());
+                else {
+                    EnviaUdp(xml, msg.getReceptorIP(), msg.getPuertoReceptor());
+                }
+                //System.out.println("Mensaje enviado");
             }
-
-            // Obtenemos un mensaje del contenedor de mensajes a enviar
-            Mensaje msg = CogerMensajeDelContenedor();
-
-            // Obtenemos el mensaje en formato xml para enviarlo
-            String xml = TransformarMensaje(msg);
-
-            // Dependiendo del protocolo, enviamos el mensaje de una forma u otra
-            if (msg.getProtocolo().equals("tcp"))
-                EnviaTcp(xml, msg.getEmisorIP(), msg.getPuertoEmisor());
-            else
-                EnviaUdp(xml, msg.getEmisorIP(), msg.getPuertoEmisor());
+        } catch (Exception e){
+            System.out.println(e);
+            System.out.println("No se ha podido enviar el mensaje");
         }
     }
 
@@ -105,7 +110,17 @@ public class GestorMensajes extends Thread
     public void AñadirMensajeContenedor(Mensaje msg) {
         //De esta manera el contenedor de mensajes recibidos no es accedido por dos hilos al mismo tiempo y conseguimos mutual exclusion
         synchronized (mutex) {
+            contenedor_de_mensajes_a_enviar.add(msg);
+            // TODO cambiar y hacer un bucle que los mande cuando se pueda
+            EnviarMensaje();
+        }
+    }
+
+    public void AñadirMensajeContenedorRecibidos(Mensaje msg) {
+        //De esta manera el contenedor de mensajes recibidos no es accedido por dos hilos al mismo tiempo y conseguimos mutual exclusion
+        synchronized (mutex) {
             contenedor_de_mensajes_recibidos.add(msg);
+            //System.out.println("Mensaje añadido al contenedor");
         }
     }
 
@@ -124,6 +139,17 @@ public class GestorMensajes extends Thread
         return msg;
     }
 
+    public Mensaje CogerMensajeDelContenedorAEnviar() {
+        Mensaje msg;
+
+        synchronized (mutex) {
+            msg = contenedor_de_mensajes_a_enviar.pop();
+        }
+
+        return msg;
+    }
+
+
     /**
      * Comprueba si el contenedor de mensajes recibidos está vacío o no
      *
@@ -134,6 +160,16 @@ public class GestorMensajes extends Thread
 
         synchronized (mutex) {
             isEmpty = contenedor_de_mensajes_recibidos.isEmpty();
+        }
+
+        return isEmpty;
+    }
+
+    public boolean ComprobarContenedorDeMensajesAEnviar() {
+        boolean isEmpty;
+
+        synchronized (mutex) {
+            isEmpty = contenedor_de_mensajes_a_enviar.isEmpty();
         }
 
         return isEmpty;
@@ -195,7 +231,8 @@ public class GestorMensajes extends Thread
             DatagramPacket mensaje = new DatagramPacket(buffer, buffer.length, InetAddress.getByName(host), Integer.parseInt(puerto));
 
             //Lo enviamos con send
-            System.out.println("Envio el datagrama");
+            //System.out.println("Envio el datagrama");
+            //System.out.println("Envio el datagrama");
             socketUDP.send(mensaje);
 
             //Cerramos el socket
@@ -247,9 +284,8 @@ public class GestorMensajes extends Thread
         h.put("protocolo",protocolo);
         h.put("id_Mensaje",id_men);
         Date d = new Date();
-        String date =d.toString();
+        String date = d.toString();
         h.put("tiempoEnvio",date);
-
 
         return h;
     }
@@ -271,7 +307,7 @@ public class GestorMensajes extends Thread
         //Creamos el mensajeRecibido y lo almacenamos
         Mensaje mR = new Mensaje(xml); // HABRÁ QUE INICIALIZARLO CORRECTAMENTE CUANDO TENGAMOS LA ESTRUCTURA DE LA CLASE
 
-        AñadirMensajeContenedor(mR);
+        AñadirMensajeContenedorRecibidos(mR);
     }
 
 
@@ -307,7 +343,6 @@ public class GestorMensajes extends Thread
         // Una vez tenemos todos estos datos ya podemos crear el XML
 
         //  Construimos el XML
-
         DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
         DocumentBuilder db = dbf.newDocumentBuilder();
         Document doc = db.newDocument();
@@ -322,8 +357,8 @@ public class GestorMensajes extends Thread
 
 
         //Insertamos el body que hemos sacado de mensajeAEnviar
-        eRaiz.appendChild(body);
-
+        if (body!=null)
+            eRaiz.appendChild(body);
 
 
         // definimos cada uno de los elementos y les asignamos los valores sacados de mensajeAEnviar

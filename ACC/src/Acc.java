@@ -18,17 +18,22 @@ public class Acc {
     static int Puerto_Monitor, Rango_IPs, puertosBuscar, Tiempo_de_vida, Numero_de_generaciones, Puerto_Propio, Estado_Actual, Puerto_Inicio, Rango_Puertos, UDPport, TCPport,
             tiempo_espera_comportamiento_base;
 
+    static boolean puertos_aleatorios;
     static double Frecuencia_partos, Frecuencia_rastreo_puertos;
 
     static Socket monitorComunicacion;
     static DataOutputStream out;
 
-    static ArrayList<AccLocalizado> contenedor_directorio_ACCs;
     static String ipInicial, ipFin;
 
     public static void main(String[] args) {
+        System.out.println("Agente iniciado");
         Puerto_Inicio = 50000;
         Rango_Puertos = 100;
+        puertos_aleatorios = true;
+        // si puertos_aleatorios, cambiar los peurtos a buscar:
+        //puertosBuscar=5;
+        puertosBuscar = Rango_Puertos/10;
 
         //Puerto_Propio = buscaNido();
         int ports[] = buscaNido();
@@ -40,9 +45,9 @@ public class Acc {
         GestorMensajes gm = new GestorMensajes(TCPport, UDPport);
 
         ComportamientoBase cb = new ComportamientoBase(ID_propio, Numero_de_generaciones, Puerto_Inicio, Rango_Puertos, Tiempo_de_vida*1000,
-                tiempo_espera_comportamiento_base*1000, Frecuencia_partos, Frecuencia_rastreo_puertos, gm,Ip_Propia,UDPport,TCPport, ipInicial, ipFin,puertosBuscar);
+                tiempo_espera_comportamiento_base*1000, Frecuencia_partos, Frecuencia_rastreo_puertos, gm,Ip_Propia,UDPport,TCPport, ipInicial, ipFin,puertosBuscar, puertos_aleatorios);
 
-        FuncionDeAgente fa = new FuncionDeAgente();
+        FuncionDeAgente fa = new FuncionDeAgente(gm, ID_propio, Ip_Propia, UDPport, TCPport);
 
         notificaNacimiento();
         Estado_Actual = Estado_del_ACC.VIVO.ordinal();
@@ -57,13 +62,12 @@ public class Acc {
         int[] ports = { 0, 0 };
 
         Random r = new Random();
-        int Puerto_Fin = Puerto_Inicio + Rango_Puertos;
-        int n = Puerto_Inicio + r.nextInt((Puerto_Fin - Puerto_Inicio) + 1);
+        int n = Puerto_Inicio + r.nextInt(Rango_Puertos) ;
         while (true) {
 
             /* SECCION 2 */
             while (n % 2 != 0) {
-                n = Puerto_Inicio + r.nextInt((Puerto_Fin - Puerto_Inicio) + 1);
+                n++;
             }
             try {
                 socket = new ServerSocket(n); // abrimos dos sockets, uno para UDP otro para TCP
@@ -102,18 +106,22 @@ public class Acc {
         Puerto_Monitor = 40000;
         ipInicial="172.24.196.1";
         ipFin="172.24.197.254";
-        puertosBuscar=5;
+
+        ipInicial = "192.168.1.207";
+        ipFin = "192.168.1.208";
 
         Frecuencia_partos = 0.5;
+        Frecuencia_partos = 1;
         Frecuencia_rastreo_puertos = 0.7;
+        Frecuencia_rastreo_puertos = 1;
 
         try {
-            System.setOut(new PrintStream(new File("C:\\Users\\domin\\Desktop\\Multiagentes-main" + ID_propio + ".txt")));
+            System.setOut(new PrintStream(new File("C:\\Users\\"+ System.getProperty("user.name") +"\\Desktop\\Multiagentes-main\\" + ID_propio + ".txt")));
         } catch (FileNotFoundException e) {
             throw new RuntimeException(e);
         }
 
-        System.out.println("generaConfiguracionInicial");
+        //System.out.println("generaConfiguracionInicial");
     }
 
     static void notificaNacimiento() {
@@ -127,10 +135,5 @@ public class Acc {
         } catch (IOException e) {
             System.out.println(" No se ha podido enviar la notificación de nacimiento");
         }
-    }
-    static public void addAgenteLocalizado(String ID, String IP, int puerto){
-        AccLocalizado nuevoAgente = new AccLocalizado(ID, IP, puerto);
-        if(!contenedor_directorio_ACCs.contains(nuevoAgente))
-            contenedor_directorio_ACCs.add(nuevoAgente);
     }
 }

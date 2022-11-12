@@ -21,12 +21,12 @@ public class ComportamientoBase implements Runnable{
     Random random = new Random();
 
     ComportamientoBase(String id, int generaciones, int puerto_Inicio, int rango_Puertos, int tiempoDeVida, int tiempo_espera_comportamiento_base,
-                       double frecuencia_partos, double frecuencia_rastreo_puertos, GestorMensajes gm,String ipPropia, int puertoUDP, int puertoTCP, String ipInicial, String ipFin, int puertosBuscar) {
+                       double frecuencia_partos, double frecuencia_rastreo_puertos, GestorMensajes gm,String ipPropia, int puertoUDP, int puertoTCP, String ipInicial, String ipFin, int puertosBuscar, boolean puertos_aleatorios) {
         this.id = id;
         this.generaciones = generaciones;
         this.Puerto_Inicio = puerto_Inicio;
         this.Rango_Puertos = rango_Puertos;
-        this.puertos_aleatorios = true;
+        this.puertos_aleatorios = puertos_aleatorios;
         this.tiempoDeVida = tiempoDeVida;
         this.tiempo_espera_comportamiento_base = tiempo_espera_comportamiento_base;
 
@@ -34,7 +34,7 @@ public class ComportamientoBase implements Runnable{
         this.Frecuencia_rastreo_puertos = frecuencia_rastreo_puertos;
 
         this.horaDeMuerte = System.currentTimeMillis() + (long) tiempoDeVida;
-        this.direccionJar = "C:\\Users\\domin\\Desktop\\ACC.jar";
+        this.direccionJar = "C:\\Users\\"+ System.getProperty("user.name") +"\\Desktop\\Multiagentes-main\\ACC.jar";
 
         this.gm = gm;
         this.ipFin=ipFin;
@@ -52,16 +52,13 @@ public class ComportamientoBase implements Runnable{
     public void run() {
 
         while (horaDeMuerte > System.currentTimeMillis()) {
-            System.out.println("-------------------------------comportamiento base----------------------------");
-            GenerarNuevoAcc(id);
+            //System.out.println("-------------------------------comportamiento base----------------------------");
+            if (this.Frecuencia_partos >= this.random.nextDouble() && generaciones > 0) {
+                GenerarNuevoAcc(id);
+            }
 
-            System.out.println(tiempo_espera_comportamiento_base);
             if(this.Frecuencia_rastreo_puertos >= this.random.nextDouble()) {
-                try {
-                    this.GestorDeDirectorio();
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
+                GestorDeDirectorio();
             }
 
             try {
@@ -75,40 +72,37 @@ public class ComportamientoBase implements Runnable{
     }
 
     void GenerarNuevoAcc(String id) {
+        System.out.println("Nuevo hijo");
         try {
-            if (Frecuencia_partos >= random.nextDouble() && generaciones > 0) {
-                ProcessBuilder pb = new ProcessBuilder("C:/Program Files/Java/.../bin/java.exe", "-jar", direccionJar, "" + generaciones);
-                pb.start();
-            }
+            //ProcessBuilder pb = new ProcessBuilder("C:/Program Files/Java/.../bin/java.exe", "-jar", direccionJar, "" + generaciones);
+            ProcessBuilder pb = new ProcessBuilder("C:/Program Files/Java/jdk-17.0.4.1/bin/java.exe", "-jar", direccionJar, "" + generaciones);
+            pb.start();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
-    void GestorDeDirectorio() throws InterruptedException {
+    void GestorDeDirectorio() {
+        String siguienteIP = this.ipInicial;
         if(this.puertos_aleatorios){
-            String siguienteIP = this.ipInicial;
             do {
-                for (int j = 0; j < this.puertosBuscar; j++) {
+                for (int i = 0; i < this.puertosBuscar; i++) {
                     int puerto = this.Puerto_Inicio + this.random.nextInt(this.Rango_Puertos);
-                    if (puerto % 2 != 0) {   // comprobamos que ssea impar (UDP)
-                        puerto++;}
+                    if (puerto % 2 != 0)    // comprobamos que sea impar (UDP)
+                        puerto++;
+
                     // ponemos el mensaje de localización del host correspondiente en la lista de mensajes a enviar del gestor de mensajes
-                    System.out.println("envia mensaje");
                     this.gm.AñadirMensajeContenedor(new Mensaje(gm.generaCab(String.valueOf(this.puertoUDP),this.id,this.ipPropia,String.valueOf(puerto),"idR",siguienteIP,"busqueda","UDP","1"),null,null));
-                    siguienteIP = siguienteIP(siguienteIP);
-                    System.out.println(siguienteIP);
                 }
-            }while (!siguienteIP.equals(this.ipFin)) ;
+                siguienteIP = siguienteIP(siguienteIP);
+            }while (!siguienteIP.equals(this.ipFin));
         }else{
-            String siguienteIP = this.ipInicial;
             do{
                 for (int puerto = Puerto_Inicio; puerto <= Puerto_Inicio + Rango_Puertos; puerto += 2) {
                     // ponemos el mensaje de localización del host correspondiente en la lista de mensajes a enviar del gestor de mensajes
                     this.gm.AñadirMensajeContenedor(new Mensaje(gm.generaCab(String.valueOf(this.puertoUDP),this.id,this.ipPropia,String.valueOf(puerto),"idR",siguienteIP,"busqueda","UDP","1"),null,null));
                 }
                 siguienteIP = siguienteIP(siguienteIP);
-                System.out.println(siguienteIP);
             }while(!siguienteIP.equals(this.ipFin));
         }
     }
