@@ -26,8 +26,9 @@ public class Acc {
 
     static String ipInicial, ipFin;
 
+    static GestorMensajes gm;
+
     public static void main(String[] args) {
-        System.out.println("Agente iniciado");
         Puerto_Inicio = 50000;
         Rango_Puertos = 100;
         puertos_aleatorios = true;
@@ -42,7 +43,7 @@ public class Acc {
 
         generaConfiguracionInicial(args);
 
-        GestorMensajes gm = new GestorMensajes(TCPport, UDPport);
+        gm = new GestorMensajes(TCPport, UDPport);
 
         ComportamientoBase cb = new ComportamientoBase(ID_propio, Numero_de_generaciones, Puerto_Inicio, Rango_Puertos, Tiempo_de_vida*1000,
                 tiempo_espera_comportamiento_base*1000, Frecuencia_partos, Frecuencia_rastreo_puertos, gm,Ip_Propia,UDPport,TCPport, ipInicial, ipFin,puertosBuscar, puertos_aleatorios);
@@ -51,6 +52,7 @@ public class Acc {
 
         notificaNacimiento();
         Estado_Actual = Estado_del_ACC.VIVO.ordinal();
+        System.out.println("Agente iniciado");
     }
 
     static int[] buscaNido() {
@@ -66,14 +68,14 @@ public class Acc {
         while (true) {
 
             /* SECCION 2 */
-            while (n % 2 != 0) {
+            if (n % 2 != 0) {
                 n++;
             }
             try {
                 socket = new ServerSocket(n); // abrimos dos sockets, uno para UDP otro para TCP
                 socket2 = new ServerSocket(n + 1);
 
-                assert socket != null;
+                //assert socket != null;
                 try {
                     /* SECCION 3 */
                     socket.close(); // cerramos los sockets
@@ -101,14 +103,20 @@ public class Acc {
 
         ID_propio = Ip_Propia + "-" + UDPport + "-" + TCPport;
         Numero_de_generaciones = Integer.parseInt(args[0]) - 1;
-        Tiempo_de_vida = 10;                    // Segundos
+        Tiempo_de_vida = 40;                    // Segundos
         tiempo_espera_comportamiento_base = 3;  // Segundos
+
+        // TODO Poner la IP del monitor
+        Ip_Monitor = "IP";
         Puerto_Monitor = 40000;
+
+        // Rango de IPs pertenecientes a la subred del laboratorio
         ipInicial="172.24.196.1";
         ipFin="172.24.197.254";
 
-        ipInicial = "192.168.1.207";
-        ipFin = "192.168.1.208";
+        // Para pruebas fuera del laboratorio descomentar las siguientes lineas y modificarlas si es necesario
+        //ipInicial="192.168.1.1";
+        //ipFin="192.168.1.254";
 
         Frecuencia_partos = 0.5;
         Frecuencia_partos = 1;
@@ -116,16 +124,31 @@ public class Acc {
         Frecuencia_rastreo_puertos = 1;
 
         try {
-            System.setOut(new PrintStream(new File("C:\\Users\\"+ System.getProperty("user.name") +"\\Desktop\\Multiagentes-main\\" + ID_propio + ".txt")));
+            String path = "C:\\Users\\"+ System.getProperty("user.name") +"\\Desktop\\Multiagentes-main\\" + ID_propio;
+            File file = new File(path + ".txt");
+            int nuevo = 2;
+            String ID_aux = ID_propio;
+            // se comprueba si ya existe el fichero para que no escriban varios agentes en el mismo fichero si un
+            // agente lo ha creado y ha terminado su ejecución
+            while(file.exists()){
+                file = new File(path +"-"+nuevo+".txt");
+                ID_propio = ID_aux + "-" + nuevo;
+                nuevo++;
+            }
+            System.setOut(new PrintStream(file));
         } catch (FileNotFoundException e) {
             throw new RuntimeException(e);
         }
-
         //System.out.println("generaConfiguracionInicial");
     }
 
     static void notificaNacimiento() {
-        try {
+        // se envia el mensaje usando el gestor de mensajes
+        Mensaje m = new Mensaje(gm.generaCab(String.valueOf(TCPport), ID_propio, Ip_Propia, String.valueOf(Puerto_Monitor),"Monitor", Ip_Monitor,"nacimiento","TCP","1"),null,null);
+        // TODO Descomentar la siguiente linea cuando exista un monitor
+        //gm.AñadirMensajeContenedor(m);
+
+        /*try {
             monitorComunicacion = new Socket(Ip_Propia, Puerto_Monitor);
             out = new DataOutputStream(monitorComunicacion.getOutputStream());
             out.writeUTF(
@@ -133,7 +156,7 @@ public class Acc {
                             + "\nPuerto TCP " + TCPport + "\nha creado un nuevo agente");
             System.out.println("Se ha enviado la notificación de nacimiento");
         } catch (IOException e) {
-            System.out.println(" No se ha podido enviar la notificación de nacimiento");
-        }
+            System.out.println("No se ha podido enviar la notificación de nacimiento");
+        }*/
     }
 }

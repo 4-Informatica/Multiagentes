@@ -12,6 +12,7 @@ import java.util.LinkedList;
  */
 public class RecibeUdp extends Thread {
     private GestorMensajes gestor; // Referencia del gestor de mensajes private int puertoTCP;
+    DatagramSocket servidor;
 
     RecibeUdp(GestorMensajes gestor) {
         super();
@@ -23,13 +24,11 @@ public class RecibeUdp extends Thread {
      * Método que se va a llamar al iniciar el hilo de esta clase
      */
     public void run() {
-
         while (true) {
             try {
-                DatagramSocket servidor = new DatagramSocket(gestor.Puerto_PropioUdp);
+                servidor = new DatagramSocket(gestor.Puerto_PropioUdp);
                 try {
                     // Se crea el socket vinculado al puerto, para esperar peticiones del cliente
-
 
                     //Indica que esta a la espera de la llegada de un mensaje
                     //System.out.println("Esperando petición UDP...");
@@ -41,10 +40,10 @@ public class RecibeUdp extends Thread {
                     // Recibimos el DatagramPacket
                     servidor.receive(mensaje);
 
-                /*System.out.println("Ha llegado una peticion \n");
-                System.out.println("Procedente de :" + mensaje.getAddress());
-                System.out.println("En el puerto :" + mensaje.getPort());
-                System.out.println("Sirviendo la petición");*/
+                    /*System.out.println("Ha llegado una peticion \n");
+                    System.out.println("Procedente de :" + mensaje.getAddress());
+                    System.out.println("En el puerto :" + mensaje.getPort());
+                    System.out.println("Sirviendo la petición");*/
 
                     // El mensaje se procesa y se añade a la cola
                     gestor.ProcesaMensaje(new String(mensaje.getData()));

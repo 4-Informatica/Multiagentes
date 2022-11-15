@@ -262,7 +262,7 @@ public class Mensaje {
 
             //EN path poner el doc XSD
             // TODO arreglar para que se use File dom pasado por parametro
-            validator.validate(new StreamSource(new File("C:\\Users\\" + System.getProperty("user.name") +"\\Desktop\\Multiagentes-main\\ACC\\src/estructuraXML.xml")));
+            //validator.validate(new StreamSource(new File("C:\\Users\\" + System.getProperty("user.name") +"\\Desktop\\Multiagentes-main\\ACC\\src/estructuraXML.xml")));
 
         } catch (Exception e) {
             System.out.println("Exception: "+e.getMessage());

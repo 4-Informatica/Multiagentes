@@ -175,6 +175,16 @@ public class GestorMensajes extends Thread
         return isEmpty;
     }
 
+    public void cerrarSockets(){
+        recibeUdp.servidor.close();
+        try {
+            recibeTcp.servidor.close();
+        } catch (IOException e) {
+            // Salta la excepccion si el hilo recibeTcp está esperando una petición
+            // El socket se cierra
+        }
+    }
+
     /**
      * Método para enviar mensajes por TCP
      *
@@ -182,7 +192,7 @@ public class GestorMensajes extends Thread
      * @param host Ip de la máquina a la que queremos enviar el mensaje
      * @param puerto Puerto de la máquina por la que enviar el mensaje
      */
-    public void EnviaTcp(String msg, String host, String puerto) throws ParserConfigurationException, IOException, SAXException, jdk.internal.org.xml.sax.SAXException {
+    public void EnviaTcp(String msg, String host, String puerto) throws ParserConfigurationException, IOException, SAXException{
         try {
 
             // Creación socket para comunicarse con el servidor con el host y puerto asociados al servidor
@@ -251,8 +261,6 @@ public class GestorMensajes extends Thread
                 throw new RuntimeException(eo);
             } catch (SAXException eo) {
                 throw new RuntimeException(eo);
-            } catch (jdk.internal.org.xml.sax.SAXException eo) {
-                throw new RuntimeException(eo);
             }
         }
     }
@@ -295,7 +303,7 @@ public class GestorMensajes extends Thread
     // Funcion recibeMensaje() -> Recibe mensages UDP o TCP, procesa la parte genérica (Llamando a TratarCabeza) y
     //  la almacena en ContenedorMensajesRecibidos(ArrayList) para que la función del agente los recoja cuando quiera
 
-    public void ProcesaMensaje(String xml) throws ParserConfigurationException, IOException, SAXException, jdk.internal.org.xml.sax.SAXException {
+    public void ProcesaMensaje(String xml) throws ParserConfigurationException, IOException, SAXException {
 
         //Código para recibir String
 
