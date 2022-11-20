@@ -35,6 +35,7 @@ public class GestorMensajes extends Thread
 
     private RecibeTcp recibeTcp; // Instancia de la clase que se va a encargar de recibir mensajes por TCP
     private RecibeUdp recibeUdp; // Instancia de la clase que se va a encargar de recibir mensajes por UDP
+    private EnviaMensaje enviaMensaje;
     private Object mutex = new Object(); // Mutex que vamos a utilizar para coordinar los hilos y asegurarnos de que no haya fallos
 
     public int Puerto_PropioTcp;
@@ -55,6 +56,7 @@ public class GestorMensajes extends Thread
         // Creamos los hilos de recibir mensajes con ambos protocolos
         this.recibeTcp = new RecibeTcp(this);
         this.recibeUdp = new RecibeUdp(this);
+        this.enviaMensaje = new EnviaMensaje(this);
     }
 
     /**
@@ -73,34 +75,6 @@ public class GestorMensajes extends Thread
      *
      * @throws InterruptedException
      */
-    public void EnviarMensaje() {
-        //System.out.println("ENVIAR MENSAJE");
-
-        try {
-            //System.out.println("Entrando en envía mensaje");
-
-            // Si el agente no tiene mensajes para enviar, se para 1s antes de mirar otra vez
-            if (!ComprobarContenedorDeMensajesAEnviar()) {
-                //System.out.println("Probando envia mensaje");
-
-                // Obtenemos un mensaje del contenedor de mensajes a enviar
-                Mensaje msg = CogerMensajeDelContenedorAEnviar();
-
-                // Obtenemos el mensaje en formato xml para enviarlo
-                String xml = TransformarMensaje(msg);
-                // Dependiendo del protocolo, enviamos el mensaje de una forma u otra
-                if (msg.getProtocolo().equals("TCP"))
-                    EnviaTcp(xml, msg.getReceptorIP(), msg.getPuertoReceptor());
-                else {
-                    EnviaUdp(xml, msg.getReceptorIP(), msg.getPuertoReceptor());
-                }
-                //System.out.println("Mensaje enviado");
-            }
-        } catch (Exception e){
-            System.out.println(e);
-            System.out.println("No se ha podido enviar el mensaje");
-        }
-    }
 
     /**
      * Método para añadir mensajes al contenedor.
@@ -111,8 +85,6 @@ public class GestorMensajes extends Thread
         //De esta manera el contenedor de mensajes recibidos no es accedido por dos hilos al mismo tiempo y conseguimos mutual exclusion
         synchronized (mutex) {
             contenedor_de_mensajes_a_enviar.add(msg);
-            // TODO cambiar y hacer un bucle que los mande cuando se pueda
-            EnviarMensaje();
         }
     }
 
