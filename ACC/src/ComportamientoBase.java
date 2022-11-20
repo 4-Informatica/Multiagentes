@@ -67,7 +67,8 @@ public class ComportamientoBase implements Runnable{
                 throw new RuntimeException(e);
             }
         }
-        System.out.println("fin");
+        System.out.println("Fin del agente");
+        gm.cerrarSockets();
         System.exit(0);     // Parar el agente
     }
 
@@ -92,7 +93,7 @@ public class ComportamientoBase implements Runnable{
                         puerto++;
 
                     // ponemos el mensaje de localización del host correspondiente en la lista de mensajes a enviar del gestor de mensajes
-                    this.gm.AñadirMensajeContenedor(new Mensaje(gm.generaCab(String.valueOf(this.puertoUDP),this.id,this.ipPropia,String.valueOf(puerto),"idR",siguienteIP,"busqueda","UDP","1"),null,null));
+                    this.gm.AñadirMensajeContenedor(new Mensaje(gm.generaCab(String.valueOf(this.puertoUDP),this.id,this.ipPropia,String.valueOf(puerto),"ID_desconocida",siguienteIP,"busqueda","UDP","1"),null,null));
                 }
                 siguienteIP = siguienteIP(siguienteIP);
             }while (!siguienteIP.equals(this.ipFin));
@@ -100,7 +101,7 @@ public class ComportamientoBase implements Runnable{
             do{
                 for (int puerto = Puerto_Inicio; puerto <= Puerto_Inicio + Rango_Puertos; puerto += 2) {
                     // ponemos el mensaje de localización del host correspondiente en la lista de mensajes a enviar del gestor de mensajes
-                    this.gm.AñadirMensajeContenedor(new Mensaje(gm.generaCab(String.valueOf(this.puertoUDP),this.id,this.ipPropia,String.valueOf(puerto),"idR",siguienteIP,"busqueda","UDP","1"),null,null));
+                    this.gm.AñadirMensajeContenedor(new Mensaje(gm.generaCab(String.valueOf(this.puertoUDP),this.id,this.ipPropia,String.valueOf(puerto),"ID_desconocida",siguienteIP,"busqueda","UDP","1"),null,null));
                 }
                 siguienteIP = siguienteIP(siguienteIP);
             }while(!siguienteIP.equals(this.ipFin));

@@ -1,3 +1,5 @@
+import java.util.Date;
+
 /**
  * Clase que se encarga de guardar la información de los nuevos agentes Localizados
  * @author Daniel Espinosa Perez
@@ -21,7 +23,10 @@ public class AccLocalizado {
         this.ID = ID;
         this.IP = IP;
         this.puerto = puerto;
-        this.fecha_encontrado = hora_generacion;
+        if(hora_generacion== null)
+            this.fecha_encontrado = new Date().toString();
+        else
+            this.fecha_encontrado = hora_generacion;
     }
 
     @Override

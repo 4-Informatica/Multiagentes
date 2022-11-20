@@ -13,6 +13,7 @@ import java.util.LinkedList;
 public class RecibeTcp extends Thread {
     //private static GestorMensajes gestor; // Referencia del gestor de mensajes
     private GestorMensajes gestor;
+    ServerSocket servidor;
 
     RecibeTcp(GestorMensajes gestor){
         super();
@@ -31,7 +32,7 @@ public class RecibeTcp extends Thread {
             try
             {
                 // Se crea el socket vinculado al puerto, para esperar peticiones del cliente
-                ServerSocket servidor = new ServerSocket(gestor.Puerto_PropioTcp);
+                servidor = new ServerSocket(gestor.Puerto_PropioTcp);
 
                 //System.out.println("Esperando petición TCP...");
 
@@ -79,8 +80,6 @@ public class RecibeTcp extends Thread {
                 } catch (IOException ex) {
                     throw new RuntimeException(ex);
                 } catch (SAXException ex) {
-                    throw new RuntimeException(ex);
-                } catch (jdk.internal.org.xml.sax.SAXException ex) {
                     throw new RuntimeException(ex);
                 }
             }
