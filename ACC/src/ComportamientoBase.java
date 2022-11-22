@@ -52,7 +52,8 @@ public class ComportamientoBase implements Runnable{
     public void run() {
 
         while (horaDeMuerte > System.currentTimeMillis()) {
-            //System.out.println("-------------------------------comportamiento base----------------------------");
+            //------------------------------- COMPORTAMIENTO BASE ----------------------------
+            // Aplica el porcentaje de generacion y comprueba que no es la ultima generacion
             if (this.Frecuencia_partos >= this.random.nextDouble() && generaciones > 0) {
                 GenerarNuevoAcc(id);
             }
@@ -72,11 +73,18 @@ public class ComportamientoBase implements Runnable{
         System.exit(0);     // Parar el agente
     }
 
+    /**
+     * Autores: Ignacio Gago Lopez, Pablo Domingo Fernandez, Alejandro Cebrian Sanchez, Daniel Cuenca Ortiz
+     * Fecha de creacion: 12/10/2022
+     * Genera un hijo nuevo como un proceso independiente de su padre
+     * @param id
+     */
     void GenerarNuevoAcc(String id) {
         System.out.println("Nuevo hijo");
         try {
-            //ProcessBuilder pb = new ProcessBuilder("C:/Program Files/Java/.../bin/java.exe", "-jar", direccionJar, "" + generaciones);
+            // Crea el proceso
             ProcessBuilder pb = new ProcessBuilder("C:/Program Files/Java/jdk-17.0.4.1/bin/java.exe", "-jar", direccionJar, "" + generaciones);
+            // Ejecuta el proceso
             pb.start();
         } catch (Exception e) {
             throw new RuntimeException(e);
