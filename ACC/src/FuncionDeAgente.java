@@ -60,6 +60,17 @@ public class FuncionDeAgente implements Runnable {
         this.gm.AñadirMensajeContenedor(m);
     }
 
+    /**
+     * Método encargado de añadir un nuevo agente a la lista de agentes encontrados si no estuviera ya dentro
+     * @author Daniel Espinosa Perez
+     * @author Jose Antonio Garcia Castro
+     * @author Miguel Paños Gonzalez
+     * @author Jose Angel Serrano Pardo
+     * @param ID del agente localizado
+     * @param IP del agente localizado
+     * @param puerto del agente localizado
+     * @param hora_generacion es la hora en la que se encuentra el agente localizado
+     * */
     public void addAgenteLocalizado(String ID, String IP, String puerto, String hora_generacion){
         AccLocalizado nuevoAgente = new AccLocalizado(ID, IP, puerto, hora_generacion);
         if(!contenedor_directorio_ACCs.contains(nuevoAgente)) {

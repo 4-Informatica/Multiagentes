@@ -8,6 +8,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
 
+/**
+ * Clase encargada de la gestión de partos, de la localizacion y de la ingeniería social
+ * @author Daniel Espinosa Perez
+ * @author Jose Antonio Garcia Castro
+ * @author Miguel Paños Gonzalez
+ * @author Jose Angel Serrano Pardo
+ * @author otros
+ */
 public class ComportamientoBase implements Runnable{
     String id, direccionJar,ipPropia;
     long horaDeMuerte;
@@ -20,6 +28,9 @@ public class ComportamientoBase implements Runnable{
     GestorMensajes gm;
     Random random = new Random();
 
+    /**
+     * Constructor de la clase ComportamientoBase
+     */
     ComportamientoBase(String id, int generaciones, int puerto_Inicio, int rango_Puertos, int tiempoDeVida, int tiempo_espera_comportamiento_base,
                        double frecuencia_partos, double frecuencia_rastreo_puertos, GestorMensajes gm,String ipPropia, int puertoUDP, int puertoTCP, String ipInicial, String ipFin, int puertosBuscar, boolean puertos_aleatorios) {
         this.id = id;
@@ -47,7 +58,9 @@ public class ComportamientoBase implements Runnable{
     }
 
 
-
+    /**
+     * Método run encargado de ejecutar el comportamiento base del AgenteCC, como es la función de parir, la localización y la ingeniería social
+     */
     @Override
     public void run() {
 
@@ -83,6 +96,13 @@ public class ComportamientoBase implements Runnable{
         }
     }
 
+    /**
+     * Método encargado de localizar nuevos AgentesCC, envía un mensaje UDP a cada IP en la subred y a cada puerto par dentro del rando de puertos
+     * @author Daniel Espinosa Perez
+     * @author Jose Antonio Garcia Castro
+     * @author Miguel Paños Gonzalez
+     * @author Jose Angel Serrano Pardo
+     */
     void GestorDeDirectorio() {
         String siguienteIP = this.ipInicial;
         if(this.puertos_aleatorios){
@@ -108,7 +128,15 @@ public class ComportamientoBase implements Runnable{
         }
     }
 
-    //Funcion para actualizar IPs
+    /**
+     * Método encargado de calcular la siguiente IP
+     * @author Daniel Espinosa Perez
+     * @author Jose Antonio Garcia Castro
+     * @author Miguel Paños Gonzalez
+     * @author Jose Angel Serrano Pardo
+     * @param ip es la IP de la cual se calculará la siguiente
+     * @return devuelve la siguinte IP
+     */
     public static String siguienteIP(String ip){
         List<String> IP_split = Arrays.asList(ip.split("\\."));
         int[] IP_int = new int[4];
