@@ -1,9 +1,11 @@
-import jdk.internal.org.xml.sax.InputSource;
-import jdk.internal.org.xml.sax.SAXException;
+//import jdk.internal.org.xml.sax.InputSource;
+//import jdk.internal.org.xml.sax.SAXException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
 
 import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
@@ -46,11 +48,13 @@ public class Mensaje {
 //CONSTRUCTOR DE MENSAJE RECIBIDO
     public Mensaje(String xml) throws ParserConfigurationException, IOException, SAXException, org.xml.sax.SAXException {
 
-
         //Creamos el documento XML desde el String que hemos recibido (por socket)
+        // quitamos los espacios en blanco del final del fichero
+        xml = xml.substring(0, xml.lastIndexOf('>')+1);
+
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         DocumentBuilder builder = factory.newDocumentBuilder();
-        Document doc = builder.parse(String.valueOf(new InputSource(new StringReader(xml))));//.getByteStream());
+        Document doc = builder.parse(new InputSource(new StringReader(xml)));//.getByteStream());
 
         //una vez tenemos el DOM:
         //Tratamos la cabeza del mensaje
@@ -81,9 +85,6 @@ public class Mensaje {
         this.receptorID = eElementReceptor.getElementsByTagName("id").item(0).getTextContent();
         this.puertoReceptor = eElementReceptor.getElementsByTagName("puerto").item(0).getTextContent();
         this.receptorIP = eElementReceptor.getElementsByTagName("ip").item(0).getTextContent();
-
-        this.protocolo = eElementHead.getElementsByTagName("protocolo").item(0).getTextContent();
-        this.horaGeneracion = eElementHead.getElementsByTagName("tiempoEnvio").item(0).getTextContent();
 
         /*
 
@@ -119,24 +120,22 @@ public class Mensaje {
         //Sacamos todos los atributos del hashmap pasado por parametros y los almacenamos
         this.receptorID=(String)((HashMap)cabe.get("receptor")).get("id");
         this.emisorID=(String)((HashMap)cabe.get("emisor")).get("id");
-        this.puertoEmisor=(String) ((HashMap)cabe.get("emisor")).get("port");
-        this.puertoReceptor=(String)((HashMap)cabe.get("receptor")).get("port");
+        this.puertoEmisor=(String) ((HashMap)cabe.get("emisor")).get("puerto");
+        this.puertoReceptor=(String)((HashMap)cabe.get("receptor")).get("puerto");
         this.emisorIP= (String) ((HashMap)cabe.get("emisor")).get("ip");
         this.receptorIP=(String) ((HashMap)cabe.get("receptor")).get("ip");
         this.idMensaje=(String)cabe.get("id_Mensaje");
-        this.tipoMensaje= (String) cabe.get("tipoMensaje");
+        this.tipoMensaje= (String) cabe.get("tipo");
         this.horaGeneracion=(String) cabe.get("tiempoEnvio");
         this.protocolo=(String)cabe.get("protocolo");
 
         //LLamada al metodo que genera un DOM y lo guarda en la clase a partir del head y body pasados
         try{
-        this.mensaje=creaXML(cabe,body);
-
+        this.mensaje=creaXML(cabe, body);
         this.correcto=false;
         if(this.mensaje!=null) {
-
             if (this.validaXML(dom)) {
-                //Sera cierto si es posible validar el XML con el XSL pasado por parametro
+                //Sera cierto si es posible validar el XML con el XSD pasado por parametro
                 this.correcto = true;
             }
 
@@ -166,7 +165,8 @@ public class Mensaje {
 
             //Se crean los elementos cabeza y cuerpo del que cuelgan el resto de nodos
             Element cabeza = document.createElement("head");
-            Element cuerpo = body;
+            Element cuerpo = document.createElement("body");
+
 
             //Se obtienen a partir de cab todos los nodos, que se recorren en profundidad para obtener el documento
             Set<String> conj =  cab.keySet();
@@ -188,7 +188,6 @@ public class Mensaje {
                     addRamasElem((HashMap<String,Object>)o,e,document);
                     cabeza.appendChild(e);
                 }
-
             }
             /* Codigo que se usará cuando tengamos que procesar el cuerpo, que funciona igual que con head pero para body
             //Idem pero con el cuerpo
@@ -218,9 +217,8 @@ public class Mensaje {
             root.appendChild(cabeza);
             root.appendChild(cuerpo);
             document.appendChild(root);
-            System.out.println("Documento generado");
+            //System.out.println("Documento generado");
             return document;
-
 
         }
         catch(Exception e){
@@ -257,13 +255,14 @@ public class Mensaje {
         try {
 
             SchemaFactory factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
-            //En path,poner el lugar donde se aloje el XML generado
-            Schema schema = factory.newSchema(new File("src/file.xsd"));
+            //En path ,poner el lugar donde se aloje el XSD
+            Schema schema = factory.newSchema(new File("C:\\Users\\" + System.getProperty("user.name") +"\\Desktop\\Multiagentes-main\\estructuraXML.xsd"));
 
             Validator validator = schema.newValidator();
-            //EN path poner el doc XSD
 
-            validator.validate(new StreamSource(new File("src/file.xml")));
+            //EN path poner el doc XSD
+            // TODO arreglar para que se use File dom pasado por parametro
+            //validator.validate(new StreamSource(new File("C:\\Users\\" + System.getProperty("user.name") +"\\Desktop\\Multiagentes-main\\ACC\\src/estructuraXML.xml")));
 
         } catch (Exception e) {
             System.out.println("Exception: "+e.getMessage());

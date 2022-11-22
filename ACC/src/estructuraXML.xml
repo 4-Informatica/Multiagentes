@@ -1,0 +1,22 @@
+<root>
+    <head>
+        <emisor>
+            <ip>IP</ip>
+            <puerto>port</puerto>
+            <id>id</id>
+        </emisor>
+        <receptor>
+            <ip>IP</ip>
+            <puerto>port</puerto>
+            <id>id</id>
+        </receptor>
+        <tipo>tipo</tipo>
+        <protocolo>protocolo</protocolo>
+        <id_Mensaje>id</id_Mensaje>
+        <tiempoEnvio>tiempo</tiempoEnvio>
+    </head>
+    <body>a
+    </body>
+</root>
+
+
