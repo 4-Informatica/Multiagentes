@@ -39,7 +39,7 @@ public class Acc {
 
         generaConfiguracionInicial(args);
 
-        GestorMensajes gm = new GestorMensajes(TCPport, UDPport, socketTCP, socketUDP);
+        gm = new GestorMensajes(TCPport, UDPport, socketTCP, socketUDP);
 
         ComportamientoBase cb = new ComportamientoBase(ID_propio, Numero_de_generaciones, Puerto_Inicio, Rango_Puertos, Tiempo_de_vida*1000,
                 tiempo_espera_comportamiento_base*1000, Frecuencia_partos, Frecuencia_rastreo_puertos, gm,Ip_Propia,UDPport,TCPport, ipInicial, ipFin,puertosBuscar, puertos_aleatorios);
@@ -58,7 +58,7 @@ public class Acc {
         ServerSocket socket;
         Random r = new Random();
         int Puerto_Fin = Puerto_Inicio + Rango_Puertos;
-        int TCPport = Puerto_Inicio + r.nextInt((Puerto_Fin - Puerto_Inicio) + 1);
+        TCPport = Puerto_Inicio + r.nextInt((Puerto_Fin - Puerto_Inicio) + 1);
         while (true) {
 
             /* SECCION 2 */
@@ -71,6 +71,10 @@ public class Acc {
                 socket.close();
                 UDPport = TCPport + 1;
                 socketUDP = new DatagramSocket(UDPport);
+                // QUITAR ESTO CUANDO FUNCIONE BIEN
+                socketTCP.close();
+                socketUDP.close();
+                break;
             } catch (IOException e) {// si salta excepcion al abrir puerto, puerto ocupado
                 continue; // continuamos buscando
             }
