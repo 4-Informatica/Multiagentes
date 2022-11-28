@@ -35,7 +35,7 @@ public class Acc {
         //puertosBuscar=5;
         puertosBuscar = Rango_Puertos/10;
 
-        buscaNido();
+        buscaNido(); // Busca los valores para UDPport y TCPport, ademas de socketTCP y socketUDP
 
         generaConfiguracionInicial(args);
 
@@ -51,30 +51,41 @@ public class Acc {
         System.out.println("Agente iniciado");
     }
 
+    /**
+     *  Funcion buscaNido()
+     *  @authors David Ruiz, Miguel Picazo, Adrian Lozano, Juan Ramón Romero
+     *  @fechaCreación 08/11/2022
+     *  @ultima_versión 22/11/2022
+     *  @version 1.1
+     *  @return void
+     *
+     *  La función buscaNido busca puertos libres para crear el DatagramSocket y el ServerSocket,
+     *  a su vez asigna a las variables globales tanto el puerto TCP como el puerto UDP.
+     *
+     */
     static void buscaNido() {
-        // CUIDADO CONCURRENCIA
+        Random r = new Random(); // Creamos el generador de numeros aleatorios
+        int Puerto_Fin = Puerto_Inicio + Rango_Puertos; // Establecemos el puerto máximo
+        TCPport = Puerto_Inicio + r.nextInt((Puerto_Fin - Puerto_Inicio) + 1); // Obtenemos el TCPport con un valor random
 
-        /* SECCION 1 */
-        ServerSocket socket;
-        Random r = new Random();
-        int Puerto_Fin = Puerto_Inicio + Rango_Puertos;
-        TCPport = Puerto_Inicio + r.nextInt((Puerto_Fin - Puerto_Inicio) + 1);
+        // Mientras no se pueda fijar el valor del socket estaremos realizaremos toda la ejecución
         while (true) {
-
-            /* SECCION 2 */
+            // Mientras que el puerto no sea par no lo aceptaremos
             while (TCPport % 2 != 0) {
-                TCPport = Puerto_Inicio + r.nextInt((Puerto_Fin - Puerto_Inicio) + 1);
+                TCPport = Puerto_Inicio + r.nextInt((Puerto_Fin - Puerto_Inicio) + 1); // Generamos un nuevo TCPport random
             }
             try {
-                socketTCP= new ServerSocket(TCPport); // abrimos dos sockets, uno para UDP otro para TCP
-                socket = new ServerSocket(UDPport);
-                socket.close();
-                UDPport = TCPport + 1;
-                socketUDP = new DatagramSocket(UDPport);
-                // QUITAR ESTO CUANDO FUNCIONE BIEN
-                socketTCP.close();
-                socketUDP.close();
-                break;
+                socketTCP= new ServerSocket(TCPport); // Abrimos el socket para TCP
+                ServerSocket socket = new ServerSocket(UDPport); // Probamos a abrir el socket para comprobar que este vacio
+                socket.close(); // Una vez comprobado que esta vacío lo cerramos
+                UDPport = TCPport + 1; // Asignamos el valor
+                socketUDP = new DatagramSocket(UDPport); // Abrimos el socket para UDP
+
+                socketTCP.close(); // QUITAR ESTO CUANDO SE UTILICE EN GM
+                socketUDP.close(); // QUITAR ESTO CUANDO SE UTILICE EN GM
+
+                break; // Al llegar a este punto podemos acabar la ejecución
+
             } catch (IOException e) {// si salta excepcion al abrir puerto, puerto ocupado
                 continue; // continuamos buscando
             }
