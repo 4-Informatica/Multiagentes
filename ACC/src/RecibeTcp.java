@@ -5,6 +5,7 @@ import java.io.DataInputStream;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.LinkedList;
 
 /**
@@ -27,12 +28,12 @@ public class RecibeTcp extends Thread {
     @Override
     public void run()
     {
-        while (true)
-        {
-            try
-            {
-                // Se crea el socket vinculado al puerto, para esperar peticiones del cliente
-                servidor = new ServerSocket(gestor.Puerto_PropioTcp);
+        try {
+            // Se crea el socket vinculado al puerto, para esperar peticiones del cliente
+            servidor = new ServerSocket(gestor.Puerto_PropioTcp);
+
+            while (true) {
+
 
                 //System.out.println("Esperando petición TCP...");
 
@@ -58,11 +59,9 @@ public class RecibeTcp extends Thread {
                 // Cerramos el cliente
                 cliente.close();
 
-                // Cerramos el servidor
-                servidor.close();
             }
-            catch (Exception e)
-            {
+        }
+
 
                 /*
                  * Si llegamos a un error, imprimimos la exception correspondiente
@@ -70,7 +69,27 @@ public class RecibeTcp extends Thread {
                  *
                  */
 
-                System.out.println(e.getMessage());
+        catch (SocketException error){
+        System.out.println("ServerSocket TCP cerrado");
+        }
+        catch (Exception e) {
+
+        //Si llegamos a un error, imprimimos la exception correspondiente
+        System.out.println("Problema al recibir TCP " + e.getMessage());
+        System.out.println(this.gestor.Puerto_PropioTcp);
+        e.printStackTrace();
+        }
+        finally {
+            try {
+                servidor.close();
+            } catch (IOException e) {
+                System.out.println("No se pudo cerrar el ServerSocketTCP");
+                e.printStackTrace();
+            }
+        }
+                // TODO
+                //Hacer que mande error del mensaje a la cola de mensaje
+                /*
                 try
                 {
                     gestor.ProcesaMensaje("Error: mensaje no recibido");
@@ -82,7 +101,8 @@ public class RecibeTcp extends Thread {
                 } catch (SAXException ex) {
                     throw new RuntimeException(ex);
                 }
-            }
-        }
+                */
+
     }
 }
+
