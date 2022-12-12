@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="MultaigentesCuidao:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/MultaigentesCuidao_jar</output-path>
+    <root id="archive" name="MultaigentesCuidao.jar">
+      <element id="module-output" name="MultaigentesCuidao" />
+    </root>
+  </artifact>
+</component>
