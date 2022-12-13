@@ -1,0 +1,36 @@
+<root>
+    <head>
+        <emisor>
+            <ip>IP</ip>
+            <puerto>port</puerto>
+            <id>id</id>
+        </emisor>
+        <receptor>
+            <ip>IP</ip>
+            <puerto>port</puerto>
+            <id>id</id>
+        </receptor>
+        <tipo>SolicitudTransaccion</tipo>
+        <protocolo>protocolo</protocolo>
+        <id_Mensaje>id</id_Mensaje>
+        <tiempoEnvio>tiempo</tiempoEnvio>
+    </head>
+    <body>
+		<id_transaccion>1</id_transaccion>
+		<ListaDeseadosACC1>        
+			<cromo>
+				<id_Cromo>2</id_Cromo>
+				<interes>1</interes>
+				<precio>20</precio>
+			</cromo>        					          
+			<cromo>
+				<id_Cromo>3</id_Cromo>
+				<interes>2</interes>
+				<precio>20</precio>
+			</cromo>     
+        </ListaDeseadosACC1>
+        
+    </body>
+</root>
+
+

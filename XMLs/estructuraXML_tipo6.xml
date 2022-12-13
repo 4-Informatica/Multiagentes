@@ -1,0 +1,24 @@
+<root>
+    <head>
+        <emisor>
+            <ip>IP</ip>
+            <puerto>port</puerto>
+            <id>id</id>
+        </emisor>
+        <receptor>
+            <ip>IP</ip>
+            <puerto>port</puerto>
+            <id>id</id>
+        </receptor>
+        <tipo>error_transaccion</tipo>
+        <protocolo>protocolo</protocolo>
+        <id_Mensaje>id</id_Mensaje>
+        <tiempoEnvio>tiempo</tiempoEnvio>
+    </head>
+    <body>  
+		<id_transaccion>1</id_transaccion>
+		<info_error>Cromos de peticion ya cambiados</info_error>
+    </body>
+</root>
+
+
