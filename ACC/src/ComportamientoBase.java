@@ -3,7 +3,6 @@ import org.xml.sax.SAXException;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 import java.io.IOException;
-import java.lang.management.ManagementFactory;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -52,20 +51,9 @@ public class ComportamientoBase implements Runnable{
     @Override
     public void run() {
 
-        com.sun.management.OperatingSystemMXBean mxbean = (com.sun.management.OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
-
-        // Muestra la memoria ram maxima del pc
-        System.out.println("Memoria maxima: "+mxbean.getTotalMemorySize()/(10241024) + " MegaBytes ");
-        // Minima memoria libre permitida, si la maquina sobrepasa este limite de memoria el agente se muere
-        double topeDeMemoriaMinima = mxbean.getTotalMemorySize()*0.5;
-        // Muetra el limite
-        System.out.println("Minima memoria libre: "+topeDeMemoriaMinima/(1024*1024) + " MegaBytes ");
-
-
         while (horaDeMuerte > System.currentTimeMillis()) {
-            //------------------------------- COMPORTAMIENTO BASE ----------------------------
-            // Aplica el porcentaje de generacion y comprueba que no es la ultima generacion
-            if (this.Frecuencia_partos >= this.random.nextDouble() && mxbean.getFreeMemorySize() > topeDeMemoriaMinima) {
+            //System.out.println("-------------------------------comportamiento base----------------------------");
+            if (this.Frecuencia_partos >= this.random.nextDouble() && generaciones > 0) {
                 GenerarNuevoAcc(id);
             }
 
@@ -84,18 +72,11 @@ public class ComportamientoBase implements Runnable{
         System.exit(0);     // Parar el agente
     }
 
-    /**
-     * Autores: Ignacio Gago Lopez, Pablo Domingo Fernandez, Alejandro Cebrian Sanchez, Daniel Cuenca Ortiz
-     * Fecha de creacion: 12/10/2022
-     * Genera un hijo nuevo como un proceso independiente de su padre
-     * @param id
-     */
     void GenerarNuevoAcc(String id) {
         System.out.println("Nuevo hijo");
         try {
-            // Crea el proceso
+            //ProcessBuilder pb = new ProcessBuilder("C:/Program Files/Java/.../bin/java.exe", "-jar", direccionJar, "" + generaciones);
             ProcessBuilder pb = new ProcessBuilder("C:/Program Files/Java/jdk-17.0.4.1/bin/java.exe", "-jar", direccionJar, "" + generaciones);
-            // Ejecuta el proceso
             pb.start();
         } catch (Exception e) {
             throw new RuntimeException(e);
