@@ -113,8 +113,8 @@ public class Acc {
         ipFin="172.24.197.254";
 
         // Para pruebas fuera del laboratorio descomentar las siguientes lineas y modificarlas si es necesario
-        //ipInicial="192.168.1.1";
-        //ipFin="192.168.1.254";
+        ipInicial="192.168.0.1";
+        ipFin="192.168.0.254";
 
         Frecuencia_partos = 0.5;
         Frecuencia_partos = 1;

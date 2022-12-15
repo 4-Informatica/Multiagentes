@@ -1,10 +1,6 @@
-import org.xml.sax.SAXException;
-
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.TransformerException;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Objects;
+import java.io.*;
+import java.net.Socket;
+import java.util.*;
 
 public class FuncionDeAgente implements Runnable {
     GestorMensajes gm;
@@ -12,6 +8,24 @@ public class FuncionDeAgente implements Runnable {
     String ID_Propio;
     String IP_Propia;
     int puertoUDP, puertoTCP;
+
+    /**
+     * Autores: Ignacio Gago Lopez, Pablo Domingo Fernandez, Alejandro Cebrian Sanchez, Daniel Cuenca Ortiz
+     * Fecha de creacion: 08/12/2022
+     */
+    int Nc = 10;                // Número de cromos
+    int Nci = 5;               // Número de cromos inicial
+    int[] Acp = new int[Nc];    // Albúm de cromos poseídos
+    ArrayList<Integer> Cn = new ArrayList<>(0);                   // Cromos necesitados
+
+    double Pr = 0.5;  // Porcentaje de repetición
+
+    int Tv;     // Tiempo de vida
+    int Hn;     // Hora de nacimiento
+    int Ha;     // Hora actual
+
+    Random rd = new Random();   // Random
+
     FuncionDeAgente(GestorMensajes gm, String ID_Propio, String IP_Propia, int puertoUDP, int puertoTCP) {
         this.gm = gm;
         this.contenedor_directorio_ACCs = new ArrayList<AccLocalizado>();
@@ -22,8 +36,147 @@ public class FuncionDeAgente implements Runnable {
         new Thread(this, "funcion_del_agente").start();
     }
 
+    /**
+     * Autores: Ignacio Gago Lopez, Pablo Domingo Fernandez, Alejandro Cebrian Sanchez, Daniel Cuenca Ortiz
+     * Fecha de creacion: 08/12/2022
+     * Genera el álbum inicial del agente
+     */
+    public void generarAlbum() {
+        int i = 0;
+        int cromo;
+        double prob;
+        boolean rellenado;
+        while (i < Nci) {
+            rellenado = true;
+            for (int j=0; j < Nc; j++) {                //Comprueba si todas las posiciones estan rellenadas
+                if(Acp[j] == 0) {
+                    rellenado = false;
+                }
+            }
+            if(rellenado) {
+                break;
+            }
+            cromo = rd.nextInt(0, Nc);            // Genera cromo
+            while (Acp[cromo] != 0) {                   // Revisa que no lo haya generado ya
+                cromo = rd.nextInt(Nc);                 // Genera cromo
+            }
+            Acp[cromo] ++;                              // Añade cromo
+            i ++;
+            prob = rd.nextDouble(0,1);
+            while ((prob <= Pr) && (i < Nci)) {         // Revisa la probabilidad de que se repita
+                Acp[cromo] ++;                          // Añade cromo
+                i ++;
+                prob = rd.nextDouble(0,1);
+            }
+        }
+
+        // Imprime el album de cromos poseidos
+        System.out.print("Album de cromos: ");
+        for (int j=0; j < Nc; j++) {
+            System.out.print(Acp[j] + ", ");
+        }
+        System.out.println();
+    }
+
+    /**
+     * Autores: Ignacio Gago Lopez, Pablo Domingo Fernandez, Alejandro Cebrian Sanchez, Daniel Cuenca Ortiz
+     * Fecha de creacion: 08/12/2022
+     * Genera el álbum de necesitados del agente
+     */
+    public void generarAlbumNecesitados() {
+        for (int j=0; j < Nc; j++) {
+            if (Acp[j] == 0) {
+                Cn.add(j);
+            }
+        }
+
+        // Imprime el album de cromos necesitados
+        System.out.print("Album de cromos necesitados: ");
+        for (int j=0; j < Cn.size(); j++) {
+            System.out.print(Cn.get(j) + ", ");
+        }
+        System.out.println();
+
+        if (Cn.size() > 0) {
+            publicarAlbumNecesitados();
+        }
+    }
+
+    /**
+     * Autores: Ignacio Gago Lopez, Pablo Domingo Fernandez, Alejandro Cebrian Sanchez, Daniel Cuenca Ortiz
+     * Fecha de creacion: 08/12/2022
+     * Publica el álbum de necesitados
+     */
+    public void publicarAlbumNecesitados() {
+        /*
+            // Si necesita cromos, envía mensajes a todos los ACC con los que necesita
+
+            Si [Cn] no es vacía → Enviar [M] con [Cn] a todos los ACCs
+         */
+    }
+
+    /**
+     * Autores: Ignacio Gago Lopez, Pablo Domingo Fernandez, Alejandro Cebrian Sanchez, Daniel Cuenca Ortiz
+     * Fecha de creacion: 09/12/2022
+     * Metodo temporal para 'enviar' mensajes
+     */
+    public void enviarMensajeTemporal(String hostname, int port,ArrayList<Integer> cosoAEnviar, String tipo) {
+        try (Socket socket = new Socket(hostname, port)) {
+
+            ObjectOutputStream output = new ObjectOutputStream(socket.getOutputStream());
+            ArrayList<Object> tupla = new ArrayList<>();
+            tupla.add(tipo);
+            tupla.add(cosoAEnviar);
+            output.writeObject(tupla);
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Autores: Ignacio Gago Lopez, Pablo Domingo Fernandez, Alejandro Cebrian Sanchez, Daniel Cuenca Ortiz
+     * Fecha de creacion: 09/12/2022
+     * Metodo temporal para 'recibir' mensajes
+     */
+    public ArrayList<Integer> recibeMensajeTemporal(String hostname, int port) {
+        ArrayList<Integer> CnDeOtro;
+        try (Socket socket = new Socket(hostname, port)) {
+
+            ObjectInputStream output = new ObjectInputStream(socket.getInputStream());
+            CnDeOtro = (ArrayList<Integer>) output.readObject();
+
+        } catch (IOException | ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+        return CnDeOtro;
+    }
+
     @Override
     public void run() {
+        generarAlbum();
+        generarAlbumNecesitados();
+
+        for (AccLocalizado accL : contenedor_directorio_ACCs) {
+            //this.gm.AñadirMensajeContenedor(new Mensaje(gm.generaCab(String.valueOf(this.puertoUDP),this.ID_Propio,this.IP_Propia,String.valueOf(accL.puerto), accL.ID, accL.IP, "publicacion","TCP","1"),null,null));
+            enviarMensajeTemporal(accL.IP, Integer.parseInt(accL.puerto), Cn, "publi");
+            ArrayList<Integer> CnDeOtro = recibeMensajeTemporal(accL.IP, Integer.parseInt(accL.puerto));
+            ArrayList<Integer> CromosEnviar = new ArrayList<>();
+            for (Integer i: CnDeOtro) {
+                if (Acp[i] > 1) {
+                    Acp[i] --;
+                    CromosEnviar.add(i);
+                }
+            }
+            enviarMensajeTemporal(accL.IP, Integer.parseInt(accL.puerto), CromosEnviar, "donacion");
+        }
+        // Imprime el album de cromos poseidos
+        System.out.print("Album de cromos: ");
+        for (int j=0; j < Nc; j++) {
+            System.out.print(Acp[j] + ", ");
+        }
+        System.out.println();
+
         //procesaMensajeRecibido();
         //generaMensajeAEnviar();
         while(true){
