@@ -257,15 +257,10 @@ public class Mensaje {
             document.appendChild(root);
             //System.out.println("Documento generado");
 
-            TransformerFactory transformerFactory = TransformerFactory.newInstance();
-            Transformer transformer = transformerFactory.newTransformer();
-            DOMSource domSource = new DOMSource(document);
-            StreamResult streamResult = new StreamResult(new File("C:\\Users\\Dani\\Desktop\\xml.xml"));
             // If you use
             // StreamResult result = new StreamResult(System.out);
             // the output will be pushed to the standard output ...
             // You can use that for debugging
-            transformer.transform(domSource, streamResult);
             //System.out.println("Done creating XML File");
 
             return document;
