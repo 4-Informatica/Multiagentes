@@ -11,6 +11,10 @@ import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
@@ -19,6 +23,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
 import java.net.InetAddress;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Set;
@@ -43,7 +48,13 @@ public class Mensaje {
     String tipoMensaje;
 
     //MENSAJE CUERPO
-    Element eElementBody;
+    HashMap<String, Object> eElementBody;
+
+    /**
+     * Autores: Ignacio Gago Lopez, Pablo Domingo Fernandez, Alejandro Cebrian Sanchez, Daniel Cuenca Ortiz
+     * Fecha de creacion: 15/12/2022
+     */
+    ArrayList<Integer> listaCromos;
 
 //CONSTRUCTOR DE MENSAJE RECIBIDO
     public Mensaje(String xml) throws ParserConfigurationException, IOException, SAXException, org.xml.sax.SAXException {
@@ -103,9 +114,30 @@ public class Mensaje {
         DicCabeza.put("tiempoEnvio", Fecha);*/
 
         //TRATAR body: POR AHORA SE GUARDA COMO UNA INSTANCIA ELEMENT en eElementBody (Aun no se trata)
+        /**
+         * Autores: Ignacio Gago Lopez, Pablo Domingo Fernandez, Alejandro Cebrian Sanchez, Daniel Cuenca Ortiz
+         * Fecha de creacion: 15/12/2022
+         */
+/*
+        NodeList nListHead = doc.getElementsByTagName("head");
+        Node nNodeHead = nListHead.item(0);
+        Element eElementHead = (Element) nNodeHead;
+        this.tipoMensaje = eElementHead.getElementsByTagName("tipo").item(0).getTextContent();
+ */
         NodeList nListBody = doc.getElementsByTagName("body");
         Node nNodeBody = nListBody.item(0);
-        this.eElementBody = (Element) nNodeBody;
+        Element eElementBody = (Element) nNodeBody;
+        if (eElementBody!=null) {
+            NodeList listaNodoCromos = eElementBody.getElementsByTagName("ListaCromos");
+            listaNodoCromos = listaNodoCromos.item(0).getChildNodes();
+            this.listaCromos = new ArrayList<>();
+
+            for (int i = 0; i < listaNodoCromos.getLength(); i++) {
+                this.listaCromos.add(Integer.valueOf(listaNodoCromos.item(i).getTextContent()));
+            }
+        }
+
+        //this.eElementBody = (HashMap<String, Object>) nNodeBody;
 
     }
 
@@ -115,7 +147,7 @@ public class Mensaje {
      * @param body=cuerpo del mensaje, dejamos en Element vacio porque aun no se implementa la parte del cuerpo
      * @param dom= XLS para comprobar que es correcto el mensaje
      */
-    public Mensaje(HashMap<String,Object> cabe, Element body, File dom){
+    public Mensaje(HashMap<String,Object> cabe, HashMap<String,Object> body, File dom){
 
         //Sacamos todos los atributos del hashmap pasado por parametros y los almacenamos
         this.receptorID=(String)((HashMap)cabe.get("receptor")).get("id");
@@ -129,6 +161,12 @@ public class Mensaje {
         this.horaGeneracion=(String) cabe.get("tiempoEnvio");
         this.protocolo=(String)cabe.get("protocolo");
 
+        /**
+         * Autores: Ignacio Gago Lopez, Pablo Domingo Fernandez, Alejandro Cebrian Sanchez, Daniel Cuenca Ortiz
+         * Fecha de creacion: 16/12/2022
+         * Guardamos el body en eElementBody
+         */
+        this.eElementBody = body;
         //LLamada al metodo que genera un DOM y lo guarda en la clase a partir del head y body pasados
         try{
         this.mensaje=creaXML(cabe, body);
@@ -153,7 +191,7 @@ public class Mensaje {
      */
 
 
-    private Document creaXML(HashMap<String,Object> cab,Element body){
+    private Document creaXML(HashMap<String,Object> cab,HashMap<String,Object> body){
         try {
             DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
             DocumentBuilder db = dbf.newDocumentBuilder();
@@ -189,40 +227,53 @@ public class Mensaje {
                     cabeza.appendChild(e);
                 }
             }
-            /* Codigo que se usará cuando tengamos que procesar el cuerpo, que funciona igual que con head pero para body
+            // Codigo que se usará cuando tengamos que procesar el cuerpo, que funciona igual que con head pero para body
             //Idem pero con el cuerpo
-            conj =  body.keySet();
-            it = conj.iterator();
-            while(it.hasNext()){
-                String etiqueta = it.next();
-                Element e = document.createElement(etiqueta);
-                Object o = cab.get(etiqueta);
-                //Si hashmap en un elemento guarda un string significa que ese elemento no tiene mas hijos
-                if(o instanceof String){
-                    //Se obtiene los de profundidad 1
-                    e.appendChild(document.createTextNode(String.valueOf(o)));
-                    cuerpo.appendChild(e);
-                }
-                else{
-                    //Llamada para obener aquellos de profundidad +2
-                    addRamasElem((HashMap<String,Object>)o,e,document);
-                    cuerpo.appendChild(e);
-                }
+            if (body!=null) {
+                conj = body.keySet();
+                it = conj.iterator();
+                while (it.hasNext()) {
+                    String etiqueta = it.next();
+                    Element e = document.createElement(etiqueta);
+                    Object o = body.get(etiqueta);
+                    //Si hashmap en un elemento guarda un string significa que ese elemento no tiene mas hijos
+                    if (o instanceof String) {
+                        //Se obtiene los de profundidad 1
+                        e.appendChild(document.createTextNode(String.valueOf(o)));
+                        cuerpo.appendChild(e);
+                    } else {
+                        //Llamada para obener aquellos de profundidad +2
+                        addRamasElem((HashMap<String, Object>) o, e, document);
+                        cuerpo.appendChild(e);
+                    }
 
+                }
             }
 
             //Se añaden los respectivos subarboles a la cabeza y cuerpo del documento
-            */
 
             root.appendChild(cabeza);
             root.appendChild(cuerpo);
             document.appendChild(root);
             //System.out.println("Documento generado");
+
+            TransformerFactory transformerFactory = TransformerFactory.newInstance();
+            Transformer transformer = transformerFactory.newTransformer();
+            DOMSource domSource = new DOMSource(document);
+            StreamResult streamResult = new StreamResult(new File("C:\\Users\\Dani\\Desktop\\xml.xml"));
+            // If you use
+            // StreamResult result = new StreamResult(System.out);
+            // the output will be pushed to the standard output ...
+            // You can use that for debugging
+            transformer.transform(domSource, streamResult);
+            //System.out.println("Done creating XML File");
+
             return document;
 
         }
         catch(Exception e){
-            System.out.println("Fallo en la creacion del documento");
+            System.out.println("Fallo en la creacion del documento "+e);
+            e.printStackTrace();
         }
         return null;
 
@@ -231,7 +282,8 @@ public class Mensaje {
 
 
     //Metodo para obtener los arboles de profundidad mayor a dos, para generar el DOM
-    private void addRamasElem(HashMap<String,Object> lista, Element e,Document document){
+    // Antes era privado
+    public void addRamasElem(HashMap<String,Object> lista, Element e,Document document){
         Set<String> setKey = lista.keySet();
         Iterator<String> it = setKey.iterator();
         while(it.hasNext()){
@@ -324,7 +376,7 @@ public class Mensaje {
         return tipoMensaje;
     }
 
-    public Element geteElementBody() {
+    public HashMap<String, Object> geteElementBody() {
         return eElementBody;
     }
 }

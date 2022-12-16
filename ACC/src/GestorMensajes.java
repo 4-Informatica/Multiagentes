@@ -14,10 +14,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.net.*;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.LinkedList;
-
+import java.util.*;
 
 
 /**
@@ -270,6 +267,28 @@ public class GestorMensajes extends Thread
         return h;
     }
 
+    /**
+     * Autores: Ignacio Gago Lopez, Pablo Domingo Fernandez, Alejandro Cebrian Sanchez, Daniel Cuenca Ortiz
+     * Fecha de creacion: 15/12/2022
+     * Genera el cuerpo del xml
+     * @param ListaCromos
+     */
+    public HashMap<String,Object> generaBody(ArrayList<String> ListaCromos){
+
+        // Se añaden los primeros parametros, en la implementacion final habria que sustituirlo por la
+        //ip de la maquina con this.getIP o el metodo que sea implementado
+        HashMap<String,Object> body = new HashMap<String,Object>();
+        HashMap<String,Object> listaCromos = new HashMap<String,Object>();
+
+        //Se añaden el resto de parametros
+        for (String i: ListaCromos) {
+            listaCromos.put("IdCromo_"+i, i);
+        }
+        body.put("ListaCromos", listaCromos);
+
+        return body;
+    }
+
     //AUTOR: GRUPO 4
 
     // Funcion recibeMensaje() -> Recibe mensages UDP o TCP, procesa la parte genérica (Llamando a TratarCabeza) y
@@ -318,7 +337,7 @@ public class GestorMensajes extends Thread
         String protocolo = mA.getProtocolo();
         String tiempoEnvio = mA.getHoraGeneracion();
 
-        Element body = mA.geteElementBody();
+        HashMap<String, Object> body = mA.geteElementBody();
 
         // Una vez tenemos todos estos datos ya podemos crear el XML
 
@@ -337,8 +356,32 @@ public class GestorMensajes extends Thread
 
 
         //Insertamos el body que hemos sacado de mensajeAEnviar
-        if (body!=null)
-            eRaiz.appendChild(body);
+
+        if (body!=null) {
+
+            Element cuerpo = doc.createElement("body");
+
+            Set<String> conj = body.keySet();
+            Iterator<String> it = conj.iterator();
+            while (it.hasNext()) {
+                String etiqueta = it.next();
+                Element e = doc.createElement(etiqueta);
+                Object o = body.get(etiqueta);
+                //Si hashmap en un elemento guarda un string significa que ese elemento no tiene mas hijos
+                if (o instanceof String) {
+                    //Se obtiene los de profundidad 1
+                    e.appendChild(doc.createTextNode(String.valueOf(o)));
+                    cuerpo.appendChild(e);
+                } else {
+                    //Llamada para obener aquellos de profundidad +2
+                    mA.addRamasElem((HashMap<String, Object>) o, e, doc);
+                    cuerpo.appendChild(e);
+                }
+
+            }
+
+            eRaiz.appendChild(cuerpo);
+        }
 
 
         // definimos cada uno de los elementos y les asignamos los valores sacados de mensajeAEnviar

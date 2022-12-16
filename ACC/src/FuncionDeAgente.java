@@ -14,9 +14,9 @@ public class FuncionDeAgente implements Runnable {
      * Fecha de creacion: 08/12/2022
      */
     int Nc = 10;                // Número de cromos
-    int Nci = 5;               // Número de cromos inicial
+    int Nci = 20;               // Número de cromos inicial
     int[] Acp = new int[Nc];    // Albúm de cromos poseídos
-    ArrayList<Integer> Cn = new ArrayList<>(0);                   // Cromos necesitados
+    ArrayList<String> Cn = new ArrayList<>(0); // Cromos necesitados
 
     double Pr = 0.5;  // Porcentaje de repetición
 
@@ -84,92 +84,17 @@ public class FuncionDeAgente implements Runnable {
      * Genera el álbum de necesitados del agente
      */
     public void generarAlbumNecesitados() {
+        Cn = new ArrayList<>(0);
         for (int j=0; j < Nc; j++) {
             if (Acp[j] == 0) {
-                Cn.add(j);
+                Cn.add(String.valueOf(j));
             }
         }
 
         // Imprime el album de cromos necesitados
-        System.out.print("Album de cromos necesitados: ");
-        for (int j=0; j < Cn.size(); j++) {
-            System.out.print(Cn.get(j) + ", ");
-        }
+        System.out.print("Album de cromos necesitados: "+Cn);
         System.out.println();
 
-        if (Cn.size() > 0) {
-            publicarAlbumNecesitados();
-        }
-    }
-
-    /**
-     * Autores: Ignacio Gago Lopez, Pablo Domingo Fernandez, Alejandro Cebrian Sanchez, Daniel Cuenca Ortiz
-     * Fecha de creacion: 08/12/2022
-     * Publica el álbum de necesitados
-     */
-    public void publicarAlbumNecesitados() {
-        /*
-            // Si necesita cromos, envía mensajes a todos los ACC con los que necesita
-
-            Si [Cn] no es vacía → Enviar [M] con [Cn] a todos los ACCs
-         */
-    }
-
-    /**
-     * Autores: Ignacio Gago Lopez, Pablo Domingo Fernandez, Alejandro Cebrian Sanchez, Daniel Cuenca Ortiz
-     * Fecha de creacion: 09/12/2022
-     * Metodo temporal para 'enviar' mensajes
-     */
-    public void enviarMensajeTemporal(String hostname, int port,ArrayList<Integer> cosoAEnviar, String tipo) {
-        try (Socket socket = new Socket(hostname, port)) {
-
-            ObjectOutputStream output = new ObjectOutputStream(socket.getOutputStream());
-            ArrayList<Object> tupla = new ArrayList<>();
-            tupla.add(tipo);
-            tupla.add(cosoAEnviar);
-            output.writeObject(tupla);
-
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    /**
-     * Autores: Ignacio Gago Lopez, Pablo Domingo Fernandez, Alejandro Cebrian Sanchez, Daniel Cuenca Ortiz
-     * Fecha de creacion: 09/12/2022
-     * Metodo temporal para 'recibir' mensajes
-     */
-    public ArrayList<Integer> recibeMensajeTemporal(String hostname, int port) {
-        ArrayList<Integer> CnDeOtro;
-        try (Socket socket = new Socket(hostname, port)) {
-
-            ObjectInputStream output = new ObjectInputStream(socket.getInputStream());
-            CnDeOtro = (ArrayList<Integer>) output.readObject();
-
-        } catch (IOException | ClassNotFoundException e) {
-            throw new RuntimeException(e);
-        }
-        return CnDeOtro;
-    }
-
-    @Override
-    public void run() {
-        generarAlbum();
-        generarAlbumNecesitados();
-
-        for (AccLocalizado accL : contenedor_directorio_ACCs) {
-            //this.gm.AñadirMensajeContenedor(new Mensaje(gm.generaCab(String.valueOf(this.puertoUDP),this.ID_Propio,this.IP_Propia,String.valueOf(accL.puerto), accL.ID, accL.IP, "publicacion","TCP","1"),null,null));
-            enviarMensajeTemporal(accL.IP, Integer.parseInt(accL.puerto), Cn, "publi");
-            ArrayList<Integer> CnDeOtro = recibeMensajeTemporal(accL.IP, Integer.parseInt(accL.puerto));
-            ArrayList<Integer> CromosEnviar = new ArrayList<>();
-            for (Integer i: CnDeOtro) {
-                if (Acp[i] > 1) {
-                    Acp[i] --;
-                    CromosEnviar.add(i);
-                }
-            }
-            enviarMensajeTemporal(accL.IP, Integer.parseInt(accL.puerto), CromosEnviar, "donacion");
-        }
         // Imprime el album de cromos poseidos
         System.out.print("Album de cromos: ");
         for (int j=0; j < Nc; j++) {
@@ -177,13 +102,43 @@ public class FuncionDeAgente implements Runnable {
         }
         System.out.println();
 
-        //procesaMensajeRecibido();
-        //generaMensajeAEnviar();
+        if (Cn.size() > 0) {
+            publicarListaNecesitados();
+        }
+    }
+
+    /**
+     * Autores: Ignacio Gago Lopez, Pablo Domingo Fernandez, Alejandro Cebrian Sanchez, Daniel Cuenca Ortiz
+     * Fecha de creacion: 15/12/2022
+     * Funcion del agente del grupo 1
+     */
+    @Override
+    public void run() {
+        generarAlbum();
+
         while(true){
             if(!gm.ComprobarContenedorDeMensajes()) {
+                generarAlbumNecesitados();
+
                 Mensaje m = gm.CogerMensajeDelContenedor();
                 procesaMensajeRecibido(m);
             }
+        }
+    }
+
+    /**
+     * Autores: Ignacio Gago Lopez, Pablo Domingo Fernandez, Alejandro Cebrian Sanchez, Daniel Cuenca Ortiz
+     * Fecha de creacion: 15/12/2022
+     * Publica el álbum de necesitados
+     */
+    void publicarListaNecesitados() {
+        int cont=0;
+        for (AccLocalizado accL : contenedor_directorio_ACCs) {
+            HashMap<String, Object> body = gm.generaBody(Cn);
+            Mensaje m = new Mensaje(gm.generaCab(String.valueOf(puertoTCP), ID_Propio, IP_Propia, String.valueOf(Integer.parseInt(accL.puerto)+1), accL.ID, accL.IP, "SolicitudTransaccion", "TCP", String.valueOf(cont)), body, null);
+            generaMensajeAEnviar(m);
+
+            cont++;
         }
     }
 
@@ -205,6 +160,25 @@ public class FuncionDeAgente implements Runnable {
         } else if(m.tipoMensaje.equals("respuesta_busqueda")){
             // se añade el agente que responde a la lsita de agentes localizados
             this.addAgenteLocalizado(m.getEmisorID(), m.getEmisorIP(), m.getPuertoEmisor(), m.getHoraGeneracion());
+        } else if(m.tipoMensaje.equals("SolicitudTransaccion")) {
+
+            ArrayList<String> CromosEnviar = new ArrayList<>();
+            for (Integer i: m.listaCromos) {
+                if (Acp[i] > 1) {
+                    Acp[i] --;
+                    CromosEnviar.add(String.valueOf(i));
+                }
+            }
+            Mensaje respuesta = new Mensaje(gm.generaCab(String.valueOf(this.puertoTCP), this.ID_Propio, this.IP_Propia, m.getPuertoEmisor(), m.getEmisorID(), m.getEmisorIP(), "Respuesta_SolicitudTransaccion", "TCP", m.getIdMensaje()), gm.generaBody(CromosEnviar), null);
+            System.out.println("puerto emisor: "+m.getPuertoEmisor());
+            generaMensajeAEnviar(respuesta);
+
+        } else if (m.tipoMensaje.equals("Respuesta_SolicitudTransaccion")) {
+
+            for (Integer i: m.listaCromos) {
+                Acp[i]++;
+            }
+            //generarAlbumNecesitados();
         }
     }
 
