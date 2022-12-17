@@ -37,9 +37,8 @@ public class Acc {
         puertosBuscar = Rango_Puertos/10;
 
         //Puerto_Propio = buscaNido();
-        int ports[] = buscaNido();
-        UDPport = ports[0]; // getAvailablePort para obtener un puerto libre y asignarselo a
-        TCPport = ports[1]; // nuestro agente
+        buscaNido();
+
 
         generaConfiguracionInicial(args);
 
@@ -54,43 +53,41 @@ public class Acc {
         Estado_Actual = Estado_del_ACC.VIVO.ordinal();
         System.out.println("Agente iniciado");
     }
-
-    static int[] buscaNido() {
-        // CUIDADO CONCURRENCIA
-
-        /* SECCION 1 */
-        ServerSocket socket = null;
-        ServerSocket socket2 = null;
-        int[] ports = { 0, 0 };
-
-        Random r = new Random();
-        int n = Puerto_Inicio + r.nextInt(Rango_Puertos) ;
+    /**
+     *  Funcion buscaNido()
+     *  @authors David Ruiz, Miguel Picazo, Adrian Lozano, Juan Ramón Romero
+     *  @fechaCreación 08/11/2022
+     *  @ultima_versión 13/12/2022
+     *  @version 1.2
+     *  @return void
+     *
+     *  La función buscaNido busca puertos libres para crear el DatagramSocket y el ServerSocket,
+     *  a su vez asigna a las variables globales tanto el puerto TCP como el puerto UDP.
+     *
+     */
+    static void buscaNido() {
+        Random r = new Random(); // Creamos el generador de numeros aleatorios
+        int Puerto_Fin = Puerto_Inicio + Rango_Puertos; // Establecemos el puerto máximo
+        TCPport = Puerto_Inicio + r.nextInt((Puerto_Fin - Puerto_Inicio) + 1); // Obtenemos el TCPport con un valor random
         while (true) {
-
-            /* SECCION 2 */
-            if (n % 2 != 0) {
-                n++;
+            while (TCPport % 2 != 0) {
+                TCPport = Puerto_Inicio + r.nextInt((Puerto_Fin - Puerto_Inicio) + 1); // Generamos un nuevo TCPport random
             }
             try {
-                socket = new ServerSocket(n); // abrimos dos sockets, uno para UDP otro para TCP
-                socket2 = new ServerSocket(n + 1);
+                ServerSocket socketTCP = new ServerSocket(TCPport); // Abrimos el socket para TCP
 
-                //assert socket != null;
-                try {
-                    /* SECCION 3 */
-                    socket.close(); // cerramos los sockets
-                    socket2.close();
-                } catch (IOException e) { // control de excepcion
-                    e.printStackTrace();
-                }
-                // puerto par UPD, puerto impar TCP arr
-                ports[0] = n; // array [UDP,TCP]
-                ports[1] = n + 1;
+                ServerSocket socket = new ServerSocket(UDPport); // Probamos a abrir el socket para comprobar que este vacio
+                socket.close(); // Una vez comprobado que esta vacío lo cerramos
+                UDPport = TCPport + 1; // Asignamos el valor
+
+                socketTCP.close(); // QUITAR ESTO CUANDO SE UTILICE EN GM
+                socket.close(); // QUITAR ESTO CUANDO SE UTILICE EN GM
+
+                break; // Al llegar a este punto podemos acabar la ejecución
+
             } catch (IOException e) {// si salta excepcion al abrir puerto, puerto ocupado
                 continue; // continuamos buscando
             }
-            /* SECCION 4 */
-            return ports; // retornamos [0,0] si no hay puerto
         }
     }
 
@@ -111,12 +108,12 @@ public class Acc {
         Puerto_Monitor = 40000;
 
         // Rango de IPs pertenecientes a la subred del laboratorio
-        //ipInicial="172.24.196.1";
-        //ipFin="172.24.197.254";
+        ipInicial="172.24.196.1";
+        ipFin="172.24.197.254";
 
         // Para pruebas fuera del laboratorio descomentar las siguientes lineas y modificarlas si es necesario
-        ipInicial="192.168.56.1";
-        ipFin="192.168.56.254";
+        //ipInicial="192.168.56.1";
+        //ipFin="192.168.56.254";
 
         Frecuencia_partos = 0.5;
         Frecuencia_partos = 1;
