@@ -19,9 +19,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
 import java.net.InetAddress;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Set;
+import java.util.*;
 
 public class Mensaje {
     Document mensaje;
@@ -45,7 +43,43 @@ public class Mensaje {
     //MENSAJE CUERPO
     Element eElementBody;
 
-//CONSTRUCTOR DE MENSAJE RECIBIDO
+    String id_transaccion;
+    String id_oferta;
+    String TTL;
+    String info_error;
+
+    List<String[]> ListaDeseadosACC1; //[id, interes, precio]
+    List<String[]> ListaDeseadosACC2;
+
+    /**
+     * @autor: Grupo 4
+     * @fecha 17/12/2022
+     * @ultimamodificacion 18/12/2022, Javier Pérez, Alejandro Martínez y José Jesús Gonzalez
+     * @descripcion Este constructor de la clase mensaje lo hemos implementado con el fin de que
+     * gracias a él se puedan llamar a métodos sin tener que crear un mensaje, métodos como CrearBodySolicitudTransaccion.
+     * Querremos usar estos métodos por ejemplo a la hora de crear mensajes de solicitud.
+     *
+     */
+
+    public Mensaje(){
+
+    }
+
+
+    /**
+     * @Descripcion Constructor de la case Mensaje para MENSAJES RECIBIDOS: crea una instancia de la clase Mensaje a partir de un string de entrada que
+     * corresponde al mensaje XML que se ha recibido. Este string se convierte a un Documento XML, el cual se recorre guardando
+     * cada atributo del mensaje XML en sus variables correspondientes de la clase Mensaje.
+     *
+     * @author Grupo_4
+     * @version 29/11/2022
+     * @Ultima_Modificacion 29/11/2022 13:00
+     * @param xml (string que nos llega del socket)
+     * @throws ParserConfigurationException
+     * @throws IOException
+     * @throws SAXException
+     * @throws org.xml.sax.SAXException
+     */
     public Mensaje(String xml) throws ParserConfigurationException, IOException, SAXException, org.xml.sax.SAXException {
 
         //Creamos el documento XML desde el String que hemos recibido (por socket)
@@ -86,34 +120,514 @@ public class Mensaje {
         this.puertoReceptor = eElementReceptor.getElementsByTagName("puerto").item(0).getTextContent();
         this.receptorIP = eElementReceptor.getElementsByTagName("ip").item(0).getTextContent();
 
-        /*
-
-        // NO NECESARIO
-        /HashMap DicCabeza con todos los atributos de la cabeza del mensaje
-        HashMap<String, String> DicCabeza = new HashMap<String, String>();
-        DicCabeza.put("tipo", TipoMsg);
-        DicCabeza.put("id_Mensaje", ConversacionID);
-        DicCabeza.put("emisorID", EmisorID);
-        DicCabeza.put("emisorPuerto", EmisorPuerto);
-        DicCabeza.put("emisorIP", EmisorIP);
-        DicCabeza.put("receptorID", ReceptorID);
-        DicCabeza.put("receptorPuerto", ReceptorPuerto);
-        DicCabeza.put("receptorIP", ReceptorIP);
-        DicCabeza.put("protocolo", Protocolo);
-        DicCabeza.put("tiempoEnvio", Fecha);*/
-
         //TRATAR body: POR AHORA SE GUARDA COMO UNA INSTANCIA ELEMENT en eElementBody (Aun no se trata)
         NodeList nListBody = doc.getElementsByTagName("body");
         Node nNodeBody = nListBody.item(0);
         this.eElementBody = (Element) nNodeBody;
 
+        //Dependiendo del tipo de mensaje crearemos el body de una forma u otra.
+        switch (this.tipoMensaje){
+            case "SolicitudTransaccion":
+                bodySolicitudTransaccion(this.eElementBody);
+            case "Respuesta_SolicitudTransaccion":
+                bodyRespuesta_SolicitudTransaccion(this.eElementBody);
+            case "oferta":
+                bodyoferta(this.eElementBody);
+            case "OK_oferta":
+                bodyOK_oferta(this.eElementBody);
+            case "KO_transaccion":
+                bodyKO_transaccion(this.eElementBody);
+            case "error_transaccion":
+                bodyerror_transaccion(this.eElementBody);
+        }
+
     }
 
-    /** Instancia un mensaje, creando un objeto document donde se almacena el XML formado por la cabecera y el cuerpo parados por parametros
-     *
-     * @param cabe= cabecera del mensaje
-     * @param body=cuerpo del mensaje, dejamos en Element vacio porque aun no se implementa la parte del cuerpo
-     * @param dom= XLS para comprobar que es correcto el mensaje
+    /**
+     * @autor: Grupo 4
+     * @fecha 17/12/2022
+     * @ultimamodificacion 18/12/2022, Javier Pérez, Alejandro Martínez y José Jesús Gonzalez
+     * @param body
+     * @descripcion en este método sacamos los datos del body de los mensajes tipo SolicitudTransaccion
+     */
+    private void bodySolicitudTransaccion(Element body){
+        this.id_transaccion = body.getElementsByTagName("id_transaccion").item(0).getTextContent();
+
+        NodeList LDeseados = body.getElementsByTagName("ListaDeseadosACC1");
+        Node nNodeDeseo1 = LDeseados.item(0);
+        Element eElementDeseados = (Element) nNodeDeseo1;
+        NodeList nListDeseoCromos = eElementDeseados.getElementsByTagName("cromo");//aqui
+        for(int i=0; i < nListDeseoCromos.getLength(); i++){
+            Node nNodoCromo = nListDeseoCromos.item(i);// i
+            Element eElementCromo = (Element) nNodoCromo;
+            String id, interes, precio;
+            id= eElementCromo.getElementsByTagName("id_Cromo").item(0).getTextContent();
+            interes = eElementCromo.getElementsByTagName("interes").item(0).getTextContent();
+            precio = eElementCromo.getElementsByTagName("precio").item(0).getTextContent();
+            String aux[] = {id, precio, interes};
+            this.ListaDeseadosACC1.add(aux);
+        }
+        //this.ListaDeseadosACC2 = null;
+    }
+
+    /**
+     * @autor: Grupo 4
+     * @fecha 17/12/2022
+     * @ultimamodificacion 18/12/2022, Javier Pérez, Alejandro Martínez y José Jesús Gonzalez
+     * @param body
+     * @descripcion en este método sacamos los datos del body de los mensajes tipo Respuesta_SolicitudTransaccion
+     */
+    private void bodyRespuesta_SolicitudTransaccion(Element body){
+        this.id_transaccion = body.getElementsByTagName("id_transaccion").item(0).getTextContent();
+
+        NodeList LDeseados1 = body.getElementsByTagName("ListaDeseadosACC1");
+        Node nNodeDeseo1 = LDeseados1.item(0);
+        Element eElementDeseados1 = (Element) nNodeDeseo1;
+        NodeList nListDeseoCromos1 = eElementDeseados1.getElementsByTagName("cromo");
+        for(int i=0; i < nListDeseoCromos1.getLength(); i++){
+            Node nNodoCromo = nListDeseoCromos1.item(i);// i
+            Element eElementCromo = (Element) nNodoCromo;
+            String id, interes, precio;
+            id= eElementCromo.getElementsByTagName("id_Cromo").item(0).getTextContent();
+            interes = eElementCromo.getElementsByTagName("interes").item(0).getTextContent();
+            precio = eElementCromo.getElementsByTagName("precio").item(0).getTextContent();
+            String aux[] = {id, precio, interes};
+            this.ListaDeseadosACC1.add(aux);
+        }
+
+        NodeList LDeseados2 = body.getElementsByTagName("ListaDeseadosACC2");
+        Node nNodeDeseo2 = LDeseados2.item(0);
+        Element eElementDeseados2 = (Element) nNodeDeseo2;
+        NodeList nListDeseoCromos2 = eElementDeseados2.getElementsByTagName("cromo");
+        for(int i=0; i < nListDeseoCromos2.getLength(); i++){
+            Node nNodoCromo = nListDeseoCromos2.item(i);// i
+            Element eElementCromo = (Element) nNodoCromo;
+            String id, interes, precio;
+            id= eElementCromo.getElementsByTagName("id_Cromo").item(0).getTextContent();
+            interes = eElementCromo.getElementsByTagName("interes").item(0).getTextContent();
+            precio = eElementCromo.getElementsByTagName("precio").item(0).getTextContent();
+            String aux[] = {id, precio, interes};
+            this.ListaDeseadosACC2.add(aux);
+        }
+    }
+
+    /**
+     * @autor: Grupo 4
+     * @fecha 17/12/2022
+     * @ultimamodificacion 18/12/2022, Javier Pérez, Alejandro Martínez y José Jesús Gonzalez
+     * @param body
+     * @descripcion en este método sacamos los datos del body de los mensajes tipo oferta
+     */
+    private void bodyoferta(Element body){
+        this.id_transaccion = body.getElementsByTagName("id_transaccion").item(0).getTextContent();
+        this.id_oferta = body.getElementsByTagName("id_oferta").item(0).getTextContent();
+        this.TTL = body.getElementsByTagName("TTL").item(0).getTextContent();
+
+        NodeList oferta = body.getElementsByTagName("Oferta");
+        Node nodeoferta = oferta.item(0);
+        Element eElementoferta = (Element) nodeoferta;
+
+        NodeList LDeseados1 = eElementoferta.getElementsByTagName("ListaDeseadosACC1");
+        Node nNodeDeseo1 = LDeseados1.item(0);
+        Element eElementDeseados1 = (Element) nNodeDeseo1;
+        NodeList nListDeseoCromos1 = eElementDeseados1.getElementsByTagName("cromo");
+        for(int i=0; i < nListDeseoCromos1.getLength(); i++){
+            Node nNodoCromo = nListDeseoCromos1.item(i);// i
+            Element eElementCromo = (Element) nNodoCromo;
+            String id, interes, precio;
+            id= eElementCromo.getElementsByTagName("id_Cromo").item(0).getTextContent();
+            interes = eElementCromo.getElementsByTagName("interes").item(0).getTextContent();
+            precio = eElementCromo.getElementsByTagName("precio").item(0).getTextContent();
+            String aux[] = {id, precio, interes};
+            this.ListaDeseadosACC1.add(aux);
+        }
+
+        NodeList LDeseados2 = eElementoferta.getElementsByTagName("ListaDeseadosACC2");
+        Node nNodeDeseo2 = LDeseados2.item(0);
+        Element eElementDeseados2 = (Element) nNodeDeseo2;
+        NodeList nListDeseoCromos2 = eElementDeseados2.getElementsByTagName("cromo");
+        for(int i=0; i < nListDeseoCromos2.getLength(); i++){
+            Node nNodoCromo = nListDeseoCromos2.item(i);// i
+            Element eElementCromo = (Element) nNodoCromo;
+            String id, interes, precio;
+            id= eElementCromo.getElementsByTagName("id_Cromo").item(0).getTextContent();
+            interes = eElementCromo.getElementsByTagName("interes").item(0).getTextContent();
+            precio = eElementCromo.getElementsByTagName("precio").item(0).getTextContent();
+            String aux[] = {id, precio, interes};
+            this.ListaDeseadosACC2.add(aux);
+        }
+    }
+
+    /**
+     * @autor: Grupo 4
+     * @fecha 17/12/2022
+     * @ultimamodificacion 18/12/2022, Javier Pérez, Alejandro Martínez y José Jesús Gonzalez
+     * @param body
+     * @descripcion en este método sacamos los datos del body de los mensajes tipo OK_oferta
+     */
+    private void bodyOK_oferta(Element body){
+        this.id_transaccion = body.getElementsByTagName("id_transaccion").item(0).getTextContent();
+        this.id_oferta = body.getElementsByTagName("id_oferta").item(0).getTextContent();
+        this.TTL = body.getElementsByTagName("TTL").item(0).getTextContent();
+    }
+
+    /**
+     * @autor: Grupo 4
+     * @fecha 17/12/2022
+     * @ultimamodificacion 18/12/2022, Javier Pérez, Alejandro Martínez y José Jesús Gonzalez
+     * @param body
+     * @descripcion en este método sacamos los datos del body de los mensajes tipo KO_oferta
+     */
+    private void bodyKO_transaccion(Element body){
+        this.id_transaccion = body.getElementsByTagName("id_transaccion").item(0).getTextContent();
+        //this.id_oferta = body.getElementsByTagName("id_oferta").item(0).getTextContent();
+        //this.TTL = body.getElementsByTagName("TTL").item(0).getTextContent();
+    }
+
+    /**
+     * @autor: Grupo 4
+     * @fecha 17/12/2022
+     * @ultimamodificacion 18/12/2022, Javier Pérez, Alejandro Martínez y José Jesús Gonzalez
+     * @param body
+     * @descripcion en este método sacamos los datos del body de los mensajes tipo error_transaccion
+     */
+    private void bodyerror_transaccion(Element body){
+        this.id_transaccion = body.getElementsByTagName("id_transaccion").item(0).getTextContent();
+        this.info_error = body.getElementsByTagName("info_error").item(0).getTextContent();
+
+        //this.id_oferta = body.getElementsByTagName("id_oferta").item(0).getTextContent();
+        //this.TTL = body.getElementsByTagName("TTL").item(0).getTextContent();
+    }
+
+    /**
+     * @autor: Grupo 4
+     * @fecha 17/12/2022
+     * @ultimamodificacion 18/12/2022, Javier Pérez, Alejandro Martínez y José Jesús Gonzalez
+     * @param Deseados1 lista de cromos deseados que se va a introducir en el mensaje
+     * @return se returnea un elemnto body compatible con mensajes tipo SolicitudTransaccion
+     * @throws ParserConfigurationException
+     * @descripcion esta funcion deberá llamarse para crear un body para un mensaje tipo SolicitudTransaccion.
+     * Recibe la lista de cromos que se quieren solicitar en el mensaje y crea una id_transsacion que asignara al body del mensaje.
+     */
+    public  Element CrearBodySolicitud(List<String[]> Deseados1) throws ParserConfigurationException {
+        UUID uuid = UUID.randomUUID();         //Genera un UUID que es un identificador unico y lo guarda en la variable uuid.
+        String id_transaccion_valor = uuid.toString();      //Convierte el objeto uuid en un String de Java llamando al toString haciendo mas facil el tratameinto y el almacenamiento de este.
+
+        DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+        DocumentBuilder db = dbf.newDocumentBuilder();
+        Document doc = db.newDocument();
+
+        Element ElementBody = doc.createElement("body");
+
+        Element Elementid_transaccion = doc.createElement("id_transaccion");
+        Elementid_transaccion.appendChild(doc.createTextNode(id_transaccion_valor));
+
+        ElementBody.appendChild(Elementid_transaccion);
+
+        Element ElementListaDeseadosACC1 = doc.createElement("ListaDeseadosACC1");
+
+        for(int i=0; i < Deseados1.size(); i++){
+
+            Element ElementCromo = doc.createElement("cromo");
+
+            Element Elementid_cromo = doc.createElement("id_Cromo");
+            ElementCromo.appendChild(doc.createTextNode(Deseados1.get(i)[0]));
+
+            Element Elementinteres = doc.createElement("interes");
+            ElementCromo.appendChild(doc.createTextNode(Deseados1.get(i)[1]));
+
+            Element Elementprecio = doc.createElement("precio");
+            ElementCromo.appendChild(doc.createTextNode(Deseados1.get(i)[2]));
+
+            ElementListaDeseadosACC1.appendChild(ElementCromo);
+        }
+
+        ElementBody.appendChild(ElementListaDeseadosACC1);
+
+        return ElementBody;
+    }
+
+
+    /**
+     * @autor: Grupo 4
+     * @fecha 17/12/2022
+     * @ultimamodificacion 18/12/2022, Javier Pérez, Alejandro Martínez y José Jesús Gonzalez
+     * @param id_transaccion
+     * @param Deseados1
+     * @param Deseados2
+     * @return
+     * @throws ParserConfigurationException
+     * @descripcion Recibe el id de la transaccion que asignara al body y las listas de cromos deseados por ambos agentes.
+     */
+    public Element CrearBodyRespuesta_SolicitudTransaccion(String id_transaccion, List<String[]> Deseados1, List<String[]> Deseados2) throws ParserConfigurationException {
+
+        DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+        DocumentBuilder db = dbf.newDocumentBuilder();
+        Document doc = db.newDocument();
+
+        Element ElementBody = doc.createElement("body");
+
+        Element Elementid_transaccion = doc.createElement("id_transaccion");
+        Elementid_transaccion.appendChild(doc.createTextNode(id_transaccion));
+
+        ElementBody.appendChild(Elementid_transaccion);
+
+        Element ElementListaDeseadosACC1 = doc.createElement("ListaDeseadosACC1");
+
+        for(int i=0; i < Deseados1.size(); i++){
+
+            Element ElementCromo = doc.createElement("cromo");
+
+            Element Elementid_cromo = doc.createElement("id_Cromo");
+            ElementCromo.appendChild(doc.createTextNode(Deseados1.get(i)[0]));
+
+            Element Elementinteres = doc.createElement("interes");
+            ElementCromo.appendChild(doc.createTextNode(Deseados1.get(i)[1]));
+
+            Element Elementprecio = doc.createElement("precio");
+            ElementCromo.appendChild(doc.createTextNode(Deseados1.get(i)[2]));
+
+            ElementListaDeseadosACC1.appendChild(ElementCromo);
+        }
+
+        ElementBody.appendChild(ElementListaDeseadosACC1);
+
+        Element ElementListaDeseadosACC2 = doc.createElement("ListaDeseadosACC2");
+
+        for(int i=0; i < Deseados2.size(); i++){
+
+            Element ElementCromo = doc.createElement("cromo");
+
+            Element Elementid_cromo = doc.createElement("id_Cromo");
+            ElementCromo.appendChild(doc.createTextNode(Deseados2.get(i)[0]));
+
+            Element Elementinteres = doc.createElement("interes");
+            ElementCromo.appendChild(doc.createTextNode(Deseados2.get(i)[1]));
+
+            Element Elementprecio = doc.createElement("precio");
+            ElementCromo.appendChild(doc.createTextNode(Deseados2.get(i)[2]));
+
+            ElementListaDeseadosACC2.appendChild(ElementCromo);
+        }
+
+        ElementBody.appendChild(ElementListaDeseadosACC2);
+
+        return ElementBody;
+    }
+
+
+    /**
+     * @autor: Grupo 4
+     * @fecha 17/12/2022
+     * @ultimamodificacion 18/12/2022, Javier Pérez, Alejandro Martínez y José Jesús Gonzalez
+     * @param id_transaccion
+     * @param Deseados1
+     * @param Deseados2
+     * @return
+     * @throws ParserConfigurationException
+     * @descripcion Igual a CrearBodyRespuesta_SolicitudTransaccion pero tambien se crea un id de oferta.
+     */
+    public Element CrearBodyoferta(String id_transaccion,List<String []> Deseados1, List<String []> Deseados2 ) throws ParserConfigurationException {
+
+        UUID uuid = UUID.randomUUID();         //Genera un UUID que es un identificador unico y lo guarda en la variable uuid.
+        String id_oferta = uuid.toString();      //Convierte el objeto uuid en un String de Java llamando al toString haciendo mas facil el tratameinto y el almacenamiento de este.
+
+        String TTL = "1000";
+
+        DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+        DocumentBuilder db = dbf.newDocumentBuilder();
+        Document doc = db.newDocument();
+
+        Element ElementBody = doc.createElement("body");
+
+        Element Elementid_transaccion = doc.createElement("id_transaccion");
+        Elementid_transaccion.appendChild(doc.createTextNode(id_transaccion));
+
+        Element Elementid_oferta = doc.createElement("id_oferta");
+        Elementid_oferta.appendChild(doc.createTextNode(id_oferta));
+
+        Element ElementTTL = doc.createElement("TTL");
+        ElementTTL.appendChild(doc.createTextNode(TTL));
+
+        ElementBody.appendChild(Elementid_transaccion);
+        ElementBody.appendChild(Elementid_oferta);
+        ElementBody.appendChild(ElementTTL);
+
+        Element oferta = doc.createElement("Oferta");
+
+
+        Element ElementListaDeseadosACC1 = doc.createElement("ListaDeseadosACC1");
+
+        for(int i=0; i < Deseados1.size(); i++){
+
+            Element ElementCromo = doc.createElement("cromo");
+
+            Element Elementid_cromo = doc.createElement("id_Cromo");
+            ElementCromo.appendChild(doc.createTextNode(Deseados1.get(i)[0]));
+
+            Element Elementinteres = doc.createElement("interes");
+            ElementCromo.appendChild(doc.createTextNode(Deseados1.get(i)[1]));
+
+            Element Elementprecio = doc.createElement("precio");
+            ElementCromo.appendChild(doc.createTextNode(Deseados1.get(i)[2]));
+
+            ElementListaDeseadosACC1.appendChild(ElementCromo);
+        }
+
+        oferta.appendChild(ElementListaDeseadosACC1);
+
+        Element ElementListaDeseadosACC2 = doc.createElement("ListaDeseadosACC2");
+
+        for(int i=0; i < Deseados2.size(); i++){
+
+            Element ElementCromo = doc.createElement("cromo");
+
+            Element Elementid_cromo = doc.createElement("id_Cromo");
+            ElementCromo.appendChild(doc.createTextNode(Deseados2.get(i)[0]));
+
+            Element Elementinteres = doc.createElement("interes");
+            ElementCromo.appendChild(doc.createTextNode(Deseados2.get(i)[1]));
+
+            Element Elementprecio = doc.createElement("precio");
+            ElementCromo.appendChild(doc.createTextNode(Deseados2.get(i)[2]));
+
+            ElementListaDeseadosACC2.appendChild(ElementCromo);
+        }
+
+        oferta.appendChild(ElementListaDeseadosACC2);
+
+        ElementBody.appendChild(oferta);
+
+        return ElementBody;
+    }
+
+
+    /**
+     * @autor: Grupo 4
+     * @fecha 17/12/2022
+     * @ultimamodificacion 18/12/2022, Javier Pérez, Alejandro Martínez y José Jesús Gonzalez
+     * @param id_transaccion
+     * @param id_oferta
+     * @return
+     * @throws ParserConfigurationException
+     * @descripcion se crea el mesaje con los id pasados como parámetros.
+     */
+    public Element CrearBodyOK_oferta(String id_transaccion, String id_oferta) throws ParserConfigurationException {
+
+
+        String TTL = "1000";
+
+        DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+        DocumentBuilder db = dbf.newDocumentBuilder();
+        Document doc = db.newDocument();
+
+        Element ElementBody = doc.createElement("body");
+
+        Element Elementid_transaccion = doc.createElement("id_transaccion");
+        Elementid_transaccion.appendChild(doc.createTextNode(id_transaccion));
+
+        Element Elementid_oferta = doc.createElement("id_oferta");
+        Elementid_oferta.appendChild(doc.createTextNode(id_oferta));
+
+        Element ElementTTL = doc.createElement("TTL");
+        ElementTTL.appendChild(doc.createTextNode(TTL));
+
+        ElementBody.appendChild(Elementid_transaccion);
+        ElementBody.appendChild(Elementid_oferta);
+        ElementBody.appendChild(ElementTTL);
+
+        return ElementBody;
+    }
+
+    /**
+     * @autor: Grupo 4
+     * @fecha 17/12/2022
+     * @ultimamodificacion 18/12/2022, Javier Pérez, Alejandro Martínez y José Jesús Gonzalez
+     * @param id_transaccion
+     * @return
+     * @throws ParserConfigurationException
+     */
+    public Element CrearBodyKO_oferta(String id_transaccion/*, String id_oferta*/) throws ParserConfigurationException {
+
+
+        //String TTL = "1000";
+
+        DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+        DocumentBuilder db = dbf.newDocumentBuilder();
+        Document doc = db.newDocument();
+
+        Element ElementBody = doc.createElement("body");
+
+        Element Elementid_transaccion = doc.createElement("id_transaccion");
+        Elementid_transaccion.appendChild(doc.createTextNode(id_transaccion));
+
+       /* Element Elementid_oferta = doc.createElement("id_oferta");
+        Elementid_oferta.appendChild(doc.createTextNode(id_oferta));
+
+        Element ElementTTL = doc.createElement("TTL");
+        ElementTTL.appendChild(doc.createTextNode(TTL));
+
+        ElementBody.appendChild(Elementid_oferta);
+        ElementBody.appendChild(ElementTTL);*/
+        ElementBody.appendChild(Elementid_transaccion);
+
+
+        return ElementBody;
+    }
+
+    /**
+     * @autor: Grupo 4
+     * @fecha 17/12/2022
+     * @ultimamodificacion 18/12/2022, Javier Pérez, Alejandro Martínez y José Jesús Gonzalez
+     * @param id_transaccion
+     * @param error
+     * @return
+     * @throws ParserConfigurationException
+     */
+    public Element CrearBodyerror_transaccion(String id_transaccion, String error/*, String id_oferta*/) throws ParserConfigurationException {
+
+
+        //String TTL = "1000";
+
+        DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+        DocumentBuilder db = dbf.newDocumentBuilder();
+        Document doc = db.newDocument();
+
+        Element ElementBody = doc.createElement("body");
+
+        Element Elementid_transaccion = doc.createElement("id_transaccion");
+        Elementid_transaccion.appendChild(doc.createTextNode(id_transaccion));
+
+        Element Elementinfo_error = doc.createElement("info_error");
+        Elementid_transaccion.appendChild(doc.createTextNode(error));
+
+       /* Element Elementid_oferta = doc.createElement("id_oferta");
+        Elementid_oferta.appendChild(doc.createTextNode(id_oferta));
+
+        Element ElementTTL = doc.createElement("TTL");
+        ElementTTL.appendChild(doc.createTextNode(TTL));
+
+        ElementBody.appendChild(Elementid_oferta);
+        ElementBody.appendChild(ElementTTL);*/
+        ElementBody.appendChild(Elementid_transaccion);
+        ElementBody.appendChild(Elementinfo_error);
+
+
+        return ElementBody;
+    }
+
+
+    /**
+     *  @Descripcion Constructor de la case Mensaje para MENSAJES A ENVIAR: Crea una instancia de la Clase Mensaje para
+     *  construir un Mensaje a Enviar. Crea un documento XML, cuyo contenido corresponderá a los elementos de entrada del constructor.
+     *  Una vez construido el mensaje XML, se validará con el documento XSD, también recibido como parámetro de entrada.
+     *  creando un objeto document donde se almacena el XML formado por la cabecera y el cuerpo parados por parametros
+     *  @author Grupo_4
+     *  @version 29/11/2022
+     *  @Ultima_Modificacion 29/11/2022 13:00
+     *  @param cabe= HashMap con la informacion de la cabecera del mensaje XML a construir (nombre_campo, valor).
+     *  @param body= cuerpo del mensaje, actualmente un atributo Element vacío (a implementar).
+     *  @param dom= XSD para validar el mensaje.
      */
     public Mensaje(HashMap<String,Object> cabe, Element body, File dom){
 
@@ -161,6 +675,8 @@ public class Mensaje {
 
             //Se crea el elemento raiz
             Document document =  db.newDocument();
+
+
             Element root = document.createElement("root");
 
             //Se crean los elementos cabeza y cuerpo del que cuelgan el resto de nodos
@@ -251,6 +767,12 @@ public class Mensaje {
     }
 
     //Valida un XML a partir de un XSD
+
+    /**
+     *
+     * @param dom
+     * @return
+     */
     private boolean validaXML(File dom){
         try {
 
@@ -326,5 +848,29 @@ public class Mensaje {
 
     public Element geteElementBody() {
         return eElementBody;
+    }
+
+    public String getId_transaccion() {
+        return id_transaccion;
+    }
+
+    public String getId_oferta() {
+        return id_oferta;
+    }
+
+    public String getTTL() {
+        return TTL;
+    }
+
+    public String getInfo_error() {
+        return info_error;
+    }
+
+    public List<String[]> getListaDeseadosACC1() {
+        return ListaDeseadosACC1;
+    }
+
+    public List<String[]> getListaDeseadosACC2() {
+        return ListaDeseadosACC2;
     }
 }
