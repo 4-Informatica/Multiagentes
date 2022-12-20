@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Created with Liquid Technologies Online Tools 1.0 (https://www.liquid-technologies.com) -->
+<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+    <xs:element name="root">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="head">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="emisor">
+                                <xs:complexType>
+                                    <xs:sequence>
+                                        <xs:element name="ip" type="xs:string" />
+                                        <xs:element name="puerto" type="xs:string" />
+                                        <xs:element name="id" type="xs:string" />
+                                    </xs:sequence>
+                                </xs:complexType>
+                            </xs:element>
+                            <xs:element name="receptor">
+                                <xs:complexType>
+                                    <xs:sequence>
+                                        <xs:element name="ip" type="xs:string" />
+                                        <xs:element name="puerto" type="xs:string" />
+                                        <xs:element name="id" type="xs:string" />
+                                    </xs:sequence>
+                                </xs:complexType>
+                            </xs:element>
+                            <xs:element name="tipo" type="xs:string" />
+                            <xs:element name="protocolo" type="xs:string" />
+                            <xs:element name="id_Mensaje" type="xs:string" />
+                            <xs:element name="tiempoEnvio" type="xs:string" />
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+                <xs:element name="body">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="id_transaccion" type="xs:unsignedByte" />
+                            <xs:element name="ListaDeseadosACC1">
+                                <xs:complexType>
+                                    <xs:sequence>
+                                        <xs:element maxOccurs="unbounded" name="cromo">
+                                            <xs:complexType>
+                                                <xs:sequence>
+                                                    <xs:element name="id_Cromo" type="xs:unsignedByte" />
+                                                    <xs:element name="interes" type="xs:unsignedByte" />
+                                                    <xs:element name="precio" type="xs:unsignedByte" />
+                                                </xs:sequence>
+                                            </xs:complexType>
+                                        </xs:element>
+                                    </xs:sequence>
+                                </xs:complexType>
+                            </xs:element>
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+</xs:schema>

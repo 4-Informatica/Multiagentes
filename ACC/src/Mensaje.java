@@ -11,13 +11,16 @@ import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 import javax.xml.validation.Validator;
-import java.io.File;
-import java.io.IOException;
-import java.io.StringReader;
+import java.io.*;
 import java.net.InetAddress;
 import java.util.*;
 
@@ -648,7 +651,7 @@ public class Mensaje {
         this.mensaje=creaXML(cabe, body);
         this.correcto=false;
         if(this.mensaje!=null) {
-            if (this.validaXML(dom)) {
+            if (this.validaXML(this.mensaje)) {
                 //Sera cierto si es posible validar el XML con el XSD pasado por parametro
                 this.correcto = true;
             }
@@ -773,24 +776,84 @@ public class Mensaje {
      * @param dom
      * @return
      */
-    private boolean validaXML(File dom){
+    private boolean validaXML(Document dom){
         try {
 
             SchemaFactory factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
-            //En path ,poner el lugar donde se aloje el XSD
-            Schema schema = factory.newSchema(new File("C:\\Users\\" + System.getProperty("user.name") +"\\Desktop\\Multiagentes-main\\estructuraXML.xsd"));
+
+            Schema schema;
+            switch (this.tipoMensaje){
+                case "SolicitudTransaccion":
+                    schema = factory.newSchema(new File("C:\\Users\\" + System.getProperty("user.name") +"\\Desktop\\Multiagentes-main\\ACC\\src\\xsdTipo1.xsd"));
+                    break;
+                case "Respuesta_SolicitudTransaccion":
+                    schema = factory.newSchema(new File("C:\\Users\\" + System.getProperty("user.name") +"\\Desktop\\Multiagentes-main\\ACC\\src\\xsdTipo2.xsd"));
+                    break;
+                case "oferta":
+                    schema = factory.newSchema(new File("C:\\Users\\" + System.getProperty("user.name") +"\\Desktop\\Multiagentes-main\\ACC\\src\\xsdTipo3.xsd"));
+                    break;
+                case "OK_oferta":
+                    schema = factory.newSchema(new File("C:\\Users\\" + System.getProperty("user.name") +"\\Desktop\\Multiagentes-main\\ACC\\src\\xsdTipo4.xsd"));
+                    break;
+                case "KO_transaccion":
+                    schema = factory.newSchema(new File("C:\\Users\\" + System.getProperty("user.name") +"\\Desktop\\Multiagentes-main\\ACC\\src\\xsdTipo5.xsd"));
+                    break;
+                case "error_transaccion":
+                    schema = factory.newSchema(new File("C:\\Users\\" + System.getProperty("user.name") +"\\Desktop\\Multiagentes-main\\ACC\\src\\xsdTipo6.xsd"));
+                    break;
+
+            }
+            schema = factory.newSchema(new File("C:\\Users\\" + System.getProperty("user.name") +"\\Desktop\\Multiagentes-main\\estructuraXML.xsd"));
 
             Validator validator = schema.newValidator();
 
             //EN path poner el doc XSD
-            // TODO arreglar para que se use File dom pasado por parametro
-            //validator.validate(new StreamSource(new File("C:\\Users\\" + System.getProperty("user.name") +"\\Desktop\\Multiagentes-main\\ACC\\src/estructuraXML.xml")));
+            guardaConFormato(dom,"C:\\Users\\" + System.getProperty("user.name") +"\\Desktop\\Multiagentes-main\\ACC\\src\\xml_doc.xml");
+            validator.validate(new StreamSource(new File("C:\\Users\\" + System.getProperty("user.name") +"\\Desktop\\Multiagentes-main\\ACC\\src\\xml_doc.xml")));
 
         } catch (Exception e) {
             System.out.println("Exception: "+e.getMessage());
             return false;
         }
         return true;
+    }
+
+
+    // Volcamos XML al fichero
+    public static void guardaConFormato(Document document, String URI){
+        try {
+            TransformerFactory transFact = TransformerFactory.newInstance();
+
+            //Formateamos el fichero. Añadimos sangrado y la cabecera de XML
+            transFact.setAttribute("indent-number", new Integer(3));
+            Transformer trans = transFact.newTransformer();
+            trans.setOutputProperty(OutputKeys.INDENT, "yes");
+            trans.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "no");
+
+            //Hacemos la transformación
+            StringWriter sw = new StringWriter();
+            StreamResult sr = new StreamResult(sw);
+            DOMSource domSource = new DOMSource(document);
+            trans.transform(domSource, sr);
+
+            //Mostrar información a guardar por consola (opcional)
+            //Result console= new StreamResult(System.out);
+            //trans.transform(domSource, console);
+            try {
+                //Creamos fichero para escribir en modo texto
+                PrintWriter writer = new PrintWriter(new FileWriter(URI));
+
+                //Escribimos el árbol en el fichero
+                writer.println(sw.toString());
+
+                //Cerramos el fichero
+                writer.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        } catch(Exception ex) {
+            ex.printStackTrace();
+        }
     }
 
 
